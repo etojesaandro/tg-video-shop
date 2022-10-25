@@ -3,8 +3,6 @@ package ru.saandro.telegram.shop.controller;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
 
-import ru.saandro.telegram.shop.controller.AbstractScreenController;
-import ru.saandro.telegram.shop.controller.ControlRoomCommands;
 import ru.saandro.telegram.shop.core.ShopBot;
 import ru.saandro.telegram.shop.session.UserSession;
 
@@ -15,12 +13,23 @@ public class PromotionController extends AbstractScreenController {
     }
 
     @Override
+    public void processCallback(CallbackQuery callbackQuery) {
+        session.switchTo(BotScreens.CONTROL_ROOM);
+    }
+
+    @Override
     public void processMessage(Message message) {
-        // TODO Парсим имя будущего Админа
+        String name = message.text();
+        if (!name.startsWith("@")) {
+            prepareAndSendMenu("Некорректное имя. Попробуйте ещё раз.", BackCommand.class);
+            return;
+        }
+        bot.getConfiguration().promoteAdmin(name);
+        prepareAndSendMenu(name + " теперь Администратор!", BackCommand.class);
     }
 
     @Override
     public void onStart() {
-        prepareAndSendMenu("Введите имя будущего Администратора.");
+        prepareAndSendMenu("Введите @name будущего Администратора.", BackCommand.class);
     }
 }

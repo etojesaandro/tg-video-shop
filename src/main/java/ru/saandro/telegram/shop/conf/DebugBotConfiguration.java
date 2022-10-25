@@ -35,4 +35,8 @@ public class DebugBotConfiguration implements BotConfiguration {
     public Path getContentStoragePath() {
         return Path.of("content");
     }
+
+    @Override
+    public void promoteAdmin(String name) {
+    }
 }

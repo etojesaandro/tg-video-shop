@@ -13,11 +13,11 @@ public class MyVideosController extends AbstractScreenController {
 
     @Override
     public void processCallback(CallbackQuery callbackQuery) {
-
+        session.switchTo(BotScreens.HOME);
     }
 
     @Override
     public void onStart() {
-
+        prepareAndSendMenu("Вы ещё ничего не купили у нас? Возвращайся, когда будут деньги, приятель.", BackCommand.class);
     }
 }

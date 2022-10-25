@@ -14,4 +14,6 @@ public interface BotConfiguration {
     Path getPreviewStoragePath();
 
     Path getContentStoragePath();
+
+    void promoteAdmin(String name);
 }

@@ -16,8 +16,8 @@ import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
 
 public class ConstPgItems implements Items {
 
-    private DataSource source;
-    private SimpleTelegramLogger logger;
+    private final DataSource source;
+    private final SimpleTelegramLogger logger;
 
     public ConstPgItems(DataSource dataSource, SimpleTelegramLogger logger)
     {

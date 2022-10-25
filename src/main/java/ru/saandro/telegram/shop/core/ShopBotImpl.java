@@ -31,9 +31,9 @@ public class ShopBotImpl implements ShopBot {
 
     private final SimpleTelegramLogger logger;
 
-    private BotConfiguration botConfiguration;
+    private final BotConfiguration botConfiguration;
 
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
     private final ConcurrentHashMap<Long, UserSession> userSessionMap = new ConcurrentHashMap<>();
     private final AtomicBoolean isRunning = new AtomicBoolean(true);

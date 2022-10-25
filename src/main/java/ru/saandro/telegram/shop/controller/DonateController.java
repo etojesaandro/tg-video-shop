@@ -13,11 +13,11 @@ public class DonateController extends AbstractScreenController {
 
     @Override
     public void processCallback(CallbackQuery callbackQuery) {
-
+        session.switchTo(BotScreens.HOME);
     }
 
     @Override
     public void onStart() {
-
+        prepareAndSendMenu("+79067657732 Сбербанк, в любое время.", BackCommand.class);
     }
 }

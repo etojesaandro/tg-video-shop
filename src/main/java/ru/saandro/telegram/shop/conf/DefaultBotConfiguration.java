@@ -3,6 +3,7 @@ package ru.saandro.telegram.shop.conf;
 import java.nio.file.Path;
 
 public class DefaultBotConfiguration implements BotConfiguration {
+
     @Override
     public String getToken() {
         return "5781804964:AAHzpi5rwjl2eGNtOqUbh48Zo33QFN43yW8";
@@ -31,5 +32,10 @@ public class DefaultBotConfiguration implements BotConfiguration {
     @Override
     public Path getContentStoragePath() {
         return Path.of("content");
+    }
+
+    @Override
+    public void promoteAdmin(String name) {
+
     }
 }
