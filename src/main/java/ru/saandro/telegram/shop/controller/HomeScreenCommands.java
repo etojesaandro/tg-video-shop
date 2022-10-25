@@ -6,23 +6,23 @@ import java.util.Optional;
 public enum HomeScreenCommands implements EnumWithDescription {
     BUY_VIDEOS("Buy Videos"),
     MY_VIDEOS("My Videos"),
-    DONATE("Donate");
+    DONATE("Donate"),
+    CONTROL_ROOM("Control Room", true);
 
     public final String name;
     public final String descr;
+    public final boolean admin;
 
     HomeScreenCommands(String descr) {
         this.name = name().toLowerCase(Locale.ROOT);
         this.descr = descr;
+        this.admin = false;
     }
 
-    public static Optional<HomeScreenCommands> parse(String text) {
-        for (HomeScreenCommands value : HomeScreenCommands.values()) {
-            if (value.name.equals(text)) {
-                return Optional.of(value);
-            }
-        }
-        return Optional.empty();
+    HomeScreenCommands(String descr, boolean admin) {
+        this.name = name().toLowerCase(Locale.ROOT);
+        this.descr = descr;
+        this.admin = admin;
     }
 
     @Override
@@ -33,5 +33,10 @@ public enum HomeScreenCommands implements EnumWithDescription {
     @Override
     public String getDescription() {
         return descr;
+    }
+
+    @Override
+    public boolean isAdmin() {
+        return admin;
     }
 }

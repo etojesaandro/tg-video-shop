@@ -5,5 +5,11 @@ public enum BotScreens
     HOME,
     BUY_VIDEOS,
     MY_VIDEOS,
-    DONATE
+    DONATE,
+
+    CONTROL_ROOM,
+    UPLOAD_VIDEO,
+    STATISTIC,
+    PROMOTE
+
 }

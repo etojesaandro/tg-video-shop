@@ -3,17 +3,16 @@ package ru.saandro.telegram.shop.controller;
 import java.util.Locale;
 import java.util.Optional;
 
-public enum VideoGenres implements EnumWithDescription {
-    ALL("Все"),
-    FOOT("Жесть"),
-    SCARFING("Полная жесть"),
+public enum ControlRoomCommands implements EnumWithDescription {
+    UPLOAD("Загрузить Видео"),
+    STATISTIC("Статистика"),
+    PROMOTE("Назначить Администратора"),
     BACK("Назад");
-
 
     public final String name;
     public final String descr;
 
-    VideoGenres(String descr) {
+    ControlRoomCommands(String descr) {
         this.name = name().toLowerCase(Locale.ROOT);
         this.descr = descr;
     }
@@ -30,6 +29,6 @@ public enum VideoGenres implements EnumWithDescription {
 
     @Override
     public boolean isAdmin() {
-        return false;
+        return true;
     }
 }
