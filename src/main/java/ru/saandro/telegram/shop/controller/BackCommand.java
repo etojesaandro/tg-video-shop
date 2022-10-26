@@ -4,7 +4,7 @@ import java.util.Locale;
 
 public enum BackCommand implements EnumWithDescription {
 
-    BACK("Назад");
+    BACK("⬅️ Назад");
 
     public final String name;
     public final String descr;

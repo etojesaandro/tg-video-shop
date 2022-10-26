@@ -39,6 +39,6 @@ public class ControlRoomController extends AbstractScreenController {
 
     @Override
     public void onStart() {
-        prepareAndSendMenu("Добрый день, Администратор. Чем я могу вам помочь сегодня?", ControlRoomCommands.class);
+        prepareAndSendMenu("Добрый день, *Администратор*. Чем я могу вам помочь сегодня?", ControlRoomCommands.class);
     }
 }

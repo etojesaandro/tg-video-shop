@@ -13,10 +13,10 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.logging.Level;
 
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.File;
 import com.pengrad.telegrambot.model.Message;
@@ -25,7 +25,7 @@ import com.pengrad.telegrambot.model.Video;
 import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.response.GetFileResponse;
 
-import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.core.*;
 import ru.saandro.telegram.shop.session.UserSession;
 
 public class UploadVideoController extends AbstractScreenController {
@@ -42,15 +42,43 @@ public class UploadVideoController extends AbstractScreenController {
         itemBuilder = new ThickItemBuilder(bot.getConfiguration());
     }
 
-
     @Override
     public void processCallback(CallbackQuery callbackQuery) {
+        String data = callbackQuery.data();
+        Optional<BackCommand> parse = EnumWithDescription.parse(data, BackCommand.class);
+        if (parse.isPresent()) {
+            uploadState = TITLE;
+            session.switchTo(BotScreens.CONTROL_ROOM);
+            return;
+        }
+
+        if (uploadState == CONFIRMATION)
+        {
+            Optional<ConfirmationCommands> confirmedOpt = EnumWithDescription.parse(data, ConfirmationCommands.class);
+            if (confirmedOpt.isPresent()) {
+                ConfirmationCommands confirmationCommands = confirmedOpt.get();
+                switch (confirmationCommands) {
+                    case YES -> {
+                        try {
+                            itemBuilder.build(bot, session.getUser().name(), bot.getLogger()).store();
+                        } catch (ShopBotException e) {
+                            prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну и напишите мне, что я облажался хд.");
+                            bot.getLogger().log(Level.WARNING, "Storage error", e);
+                        }
+                        prepareAndSendMenu("Видео успешно загружено и доступно для покупки!");
+                    }
+                    case NO -> prepareAndSendMenu("Загрузка отменена!", BackCommand.class);
+                }
+                session.switchTo(BotScreens.CONTROL_ROOM);
+                return;
+            }
+        }
+
 
         if (uploadState == GENRE) {
-            String data = callbackQuery.data();
             itemBuilder.genre(EnumWithDescription.parse(data, VideoGenres.class).orElse(VideoGenres.ALL));
             uploadState = PRICE;
-            prepareAndSendMenu("Введите стоимость видео.");
+            prepareAndSendMenu("Введите стоимость видео.", BackCommand.class);
         }
     }
 
@@ -60,7 +88,7 @@ public class UploadVideoController extends AbstractScreenController {
             case TITLE -> {
                 itemBuilder.title(message.text());
                 uploadState = DESCRIPTION;
-                prepareAndSendMenu("Введите описание видео.");
+                prepareAndSendMenu("Введите описание видео.", BackCommand.class);
             }
             case DESCRIPTION -> {
                 itemBuilder.description(message.text());
@@ -74,9 +102,9 @@ public class UploadVideoController extends AbstractScreenController {
                     int price = Integer.parseInt(priceString);
                     itemBuilder.price(price);
                     uploadState = PREVIEW;
-                    prepareAndSendMenu("Загрузите превью файл в виде изображения или видео.");
+                    prepareAndSendMenu("Загрузите превью файл в виде изображения или видео.", BackCommand.class);
                 } catch (NumberFormatException e) {
-                    prepareAndSendMenu("Некорректная стоимость.");
+                    prepareAndSendMenu("Некорректная стоимость.", BackCommand.class);
                 }
 
             }
@@ -88,12 +116,12 @@ public class UploadVideoController extends AbstractScreenController {
                     }
                     itemBuilder.preview(preview);
                 } catch (IOException e) {
-                    prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.");
+                    prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.", BackCommand.class);
                     bot.getLogger().log(Level.WARNING, "Preview loading error", e);
                     return;
                 }
                 uploadState = CONTENT;
-                prepareAndSendMenu("Загрузите контент.");
+                prepareAndSendMenu("Загрузите контент.", BackCommand.class);
             }
             case CONTENT -> {
                 try {
@@ -103,32 +131,15 @@ public class UploadVideoController extends AbstractScreenController {
                     }
                     itemBuilder.content(content);
                 } catch (IOException e) {
-                    prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.");
+                    prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.", BackCommand.class);
                     bot.getLogger().log(Level.WARNING, "Content loading error", e);
                     return;
                 }
 
                 uploadState = CONFIRMATION;
-                prepareAndSendMenu("Введите Да/Нет для подтверждения/отмены загрузки.");
+                prepareAndSendMenu("Всё готово! Подтверждаем загрузку?.", ConfirmationCommands.class);
             }
-            case CONFIRMATION -> {
-                uploadState = DONE;
-                if (isConfirmed(message.text())) {
-                    try {
-                        itemBuilder.build(bot.getDataSource(), session.getUser().name(), bot.getLogger()).store();
-                        prepareAndSendMenu("Видео успешно загружено и доступно для покупки!");
-                    } catch (IOException e) {
-                        prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.");
-                        bot.getLogger().log(Level.WARNING, "Storage error", e);
-                    }
-                } else {
-                    prepareAndSendMenu("Загрузка отменена.");
-                }
-            }
-            case DONE -> {
-                uploadState = DONE;
-
-            }
+            case CONFIRMATION, DONE -> uploadState = DONE;
         }
     }
 
@@ -137,7 +148,7 @@ public class UploadVideoController extends AbstractScreenController {
         Video video = message.video();
         if (message.photo() != null) {
             PhotoSize[] photo = message.photo();
-            getFile = new GetFile(photo[0].fileId());
+            getFile = new GetFile(photo[photo.length - 1].fileId());
         } else if (message.video() != null) {
             getFile = new GetFile(video.fileId());
         } else {
@@ -148,11 +159,11 @@ public class UploadVideoController extends AbstractScreenController {
         GetFileResponse execute = bot.execute(getFile);
         File file = execute.file();
         String fileUrl = FILE_ADDRESS + bot.getToken() + "/" + file.filePath();
-        byte[] bytes = downloadFile(fileUrl, file.fileId(), file.fileSize());
+        byte[] bytes = downloadFile(fileUrl, file.fileSize());
         return new ContentFile(file, bytes);
     }
 
-    private byte[] downloadFile(String address, String fileName, long fileSize) throws IOException {
+    private byte[] downloadFile(String address, long fileSize) throws IOException {
         try (BufferedInputStream in = new BufferedInputStream(new URL(address).openStream());
              ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) fileSize)) {
             ByteStreams.copy(in, byteArrayOutputStream);
@@ -168,6 +179,6 @@ public class UploadVideoController extends AbstractScreenController {
     @Override
     public void onStart() {
         uploadState = TITLE;
-        prepareAndSendMenu("Введите название видео.");
+        prepareAndSendMenu("Введите название видео.", BackCommand.class);
     }
 }

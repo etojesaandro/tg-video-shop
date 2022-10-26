@@ -11,7 +11,7 @@ public class DefaultBotConfiguration implements BotConfiguration {
 
     @Override
     public String getDatabaseUrl() {
-        return "localhost";
+        return "jdbc:postgresql://localhost:5432/shopbot";
     }
 
     @Override

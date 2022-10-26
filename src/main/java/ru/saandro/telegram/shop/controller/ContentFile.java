@@ -1,6 +1,9 @@
 package ru.saandro.telegram.shop.controller;
 
-import com.google.common.io.Files;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import com.pengrad.telegrambot.model.File;
 
 public class ContentFile {
@@ -14,8 +17,16 @@ public class ContentFile {
         this.data = data;
     }
 
+    public static ContentFile of(Path contentPath) {
+        try {
+            return new ContentFile(new File(), Files.readAllBytes(contentPath));
+        } catch (IOException e) {
+            return INVALID;
+        }
+    }
+
     public String getExtention() {
-        return Files.getFileExtension(file.filePath());
+        return com.google.common.io.Files.getFileExtension(file.filePath());
     }
 
     public boolean isInvalid() {

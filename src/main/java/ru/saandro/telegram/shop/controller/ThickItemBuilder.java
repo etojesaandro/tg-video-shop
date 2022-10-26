@@ -4,9 +4,8 @@ import java.nio.file.Path;
 import javax.sql.DataSource;
 
 import ru.saandro.telegram.shop.conf.BotConfiguration;
-import ru.saandro.telegram.shop.dao.Item;
-import ru.saandro.telegram.shop.dao.PgItem;
-import ru.saandro.telegram.shop.dao.ThickItem;
+import ru.saandro.telegram.shop.core.*;
+import ru.saandro.telegram.shop.persistence.entities.*;
 import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
 
 public class ThickItemBuilder {
@@ -45,9 +44,9 @@ public class ThickItemBuilder {
         this.content = content;
     }
 
-    public Item build(DataSource source, String userName, SimpleTelegramLogger logger) {
+    public Item build(ShopBot provider, String userName, SimpleTelegramLogger logger) {
         return new ThickItem(
-                new PgItem(source, null, title, description, userName, genre, price, getPreviewPath(), getContentPath()), logger,
+                new PgItem(provider, null, title, description, userName, genre, price, getPreviewPath(), getContentPath()), logger,
                 preview, content);
     }
 

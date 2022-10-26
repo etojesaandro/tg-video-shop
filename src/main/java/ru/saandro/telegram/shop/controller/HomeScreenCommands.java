@@ -4,10 +4,10 @@ import java.util.Locale;
 import java.util.Optional;
 
 public enum HomeScreenCommands implements EnumWithDescription {
-    BUY_VIDEOS("Buy Videos"),
-    MY_VIDEOS("My Videos"),
-    DONATE("Donate"),
-    CONTROL_ROOM("Control Room", true);
+    BUY_VIDEOS("\uD83C\uDF46 Видео по Жанрам"),
+    MY_VIDEOS("❤️ Мои видео"),
+    DONATE("💵 Задонатить Нам"),
+    CONTROL_ROOM("\uD83D\uDCBB Администрирование", true);
 
     public final String name;
     public final String descr;

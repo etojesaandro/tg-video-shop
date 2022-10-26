@@ -1,4 +1,4 @@
-package ru.saandro.telegram.shop.dao;
+package ru.saandro.telegram.shop.persistence.entities;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,8 +6,10 @@ import java.nio.file.Path;
 import java.util.logging.Level;
 
 import ru.saandro.telegram.shop.controller.ContentFile;
-import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.core.*;
 import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
+
+import com.pengrad.telegrambot.request.*;
 
 public class ThickItem implements Item {
 
@@ -23,35 +25,56 @@ public class ThickItem implements Item {
         this.content = content;
     }
 
+    public ThickItem(Item item, SimpleTelegramLogger logger) {
+        this.origin = item;
+        this.logger = logger;
+        preview = loadPreview();
+        content = loadContent();
+    }
+
+    private ContentFile loadContent() {
+        return ContentFile.of(origin.getContentPath());
+    }
+
+    private ContentFile loadPreview() {
+        return ContentFile.of(origin.getPreviewPath());
+
+    }
+
     @Override
     public void sendPreviews(ShopBot bot, long chatId) {
-        origin.sendPreviews(bot, chatId);
+        if (Files.exists(origin.getPreviewPath())) {
+            SendVideo sendVideo = new SendVideo(chatId, origin.getPreviewPath().toFile());
+            bot.execute(sendVideo);
+        }
     }
 
     @Override
     public void sendContent(ShopBot bot, long chatId) {
-        origin.sendContent(bot, chatId);
+        if (Files.exists(origin.getContentPath())) {
+            SendVideo sendVideo = new SendVideo(chatId, origin.getContentPath().toFile());
+            bot.execute(sendVideo);
+        }
     }
 
     @Override
-    public void store() throws IOException {
+    public void store() throws ShopBotException {
         origin.store();
         try {
             saveFile(origin.getPreviewPath(), preview);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Unable to save the preview", e);
+            throw new ShopBotException("Unable to save the preview", e);
         }
         try {
             saveFile(origin.getContentPath(), content);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Unable to save the content", e);
+            throw new ShopBotException("Unable to save the content", e);
         }
         origin.getContentPath();
     }
 
     private void saveFile(Path path, ContentFile contentFile) throws IOException {
-        if (!Files.exists(path.getParent()))
-        {
+        if (!Files.exists(path.getParent())) {
             Files.createDirectories(path.getParent());
         }
         Files.write(path, contentFile.data);

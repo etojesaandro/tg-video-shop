@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd"
+        logicalFilePath="liquibase/payment/initial.liquibase.xml">
+
+    <changeSet id="2022-10-26_23-04" author="saandro" context="SCHEME">
+
+        <createTable tableName="ITEM">
+            <column name="ID" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_ITEM"/>
+            </column>
+            <column name="TITLE" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="AUTHOR" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PRICE" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PREVIEW_PATH" type="VARCHAR(255)"/>
+            <column name="CONTENT_PATH" type="VARCHAR(255)"/>
+        </createTable>
+
+        <createTable tableName="GENRE">
+            <column name="ID" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_GENRE"/>
+            </column>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+
+        <createTable tableName="ITEM_GENRE">
+            <column autoIncrement="true" name="ID" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_ITEM_GENRE"/>
+            </column>
+            <column name="ITEM_ID" type="INTEGER">
+                <constraints nullable="false" referencedColumnNames="ID" referencedTableName="ITEM"
+                             foreignKeyName="FK_ITEM_GENRE_ITEM"/>
+            </column>
+            <column name="GENRE_ID" type="INTEGER">
+                <constraints nullable="false" referencedColumnNames="ID" referencedTableName="GENRE"
+                             foreignKeyName="FK_ITEM_GENRE_GENRE"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint constraintName="UK_ITEM_GENRE" tableName="ITEM_GENRE"
+                             columnNames="ITEM_ID, GENRE_ID"/>
+
+        <createTable tableName="BOT_USER">
+            <column name="ID" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_BOT_USER"/>
+            </column>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="BALANCE" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="BOT_USER_ITEM">
+            <column autoIncrement="true" name="ID" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PK_USER_BOT_USER"/>
+            </column>
+            <column name="BOT_USER_ID" type="INTEGER">
+                <constraints nullable="false" referencedColumnNames="ID" referencedTableName="BOT_USER"
+                             foreignKeyName="FK_BOT_USER_ID_ITEM_BOT_USER_ID"/>
+            </column>
+            <column name="ITEM_ID" type="INTEGER">
+                <constraints nullable="false" referencedColumnNames="ID" referencedTableName="ITEM"
+                             foreignKeyName="FK_BOT_USER_ID_ITEM_ITEM"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint constraintName="UK_BOT_USER_ITEM" tableName="BOT_USER_ITEM"
+                             columnNames="BOT_USER_ID, ITEM_ID"/>
+    </changeSet>
+</databaseChangeLog>
+

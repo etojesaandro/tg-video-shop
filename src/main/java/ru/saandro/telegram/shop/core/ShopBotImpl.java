@@ -1,31 +1,28 @@
 package ru.saandro.telegram.shop.core;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import javax.sql.DataSource;
+import liquibase.exception.*;
+import ru.saandro.telegram.shop.conf.*;
+import ru.saandro.telegram.shop.logger.*;
+import ru.saandro.telegram.shop.persistence.*;
+import ru.saandro.telegram.shop.persistence.entities.*;
+import ru.saandro.telegram.shop.session.*;
 
-import com.jcabi.jdbc.StaticSource;
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.Chat;
-import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.model.User;
-import com.pengrad.telegrambot.request.BaseRequest;
-import com.pengrad.telegrambot.response.BaseResponse;
+import javax.sql.*;
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
-import ru.saandro.telegram.shop.conf.BotCommands;
-import ru.saandro.telegram.shop.conf.BotConfiguration;
-import ru.saandro.telegram.shop.conf.SetMyCommandsImpl;
-import ru.saandro.telegram.shop.dao.PgBotUser;
-import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
-import ru.saandro.telegram.shop.session.UserSession;
+import com.pengrad.telegrambot.*;
+import com.pengrad.telegrambot.model.*;
+import com.pengrad.telegrambot.request.*;
+import com.pengrad.telegrambot.response.*;
+
+import static java.util.logging.Level.WARNING;
 
 public class ShopBotImpl implements ShopBot {
+
+    public static final String MASTER_CHANGE_LOG = "liquibase/master.liquibase.xml";
 
     private final TelegramBot telegramBot;
 
@@ -33,32 +30,30 @@ public class ShopBotImpl implements ShopBot {
 
     private final BotConfiguration botConfiguration;
 
-    private final DataSource dataSource;
-
     private final ConcurrentHashMap<Long, UserSession> userSessionMap = new ConcurrentHashMap<>();
     private final AtomicBoolean isRunning = new AtomicBoolean(true);
 
     public ShopBotImpl(BotConfiguration botConfiguration, SimpleTelegramLogger simpleTelegramLogger) {
-
         this.telegramBot = new TelegramBot(botConfiguration.getToken());
         this.botConfiguration = botConfiguration;
         this.logger = simpleTelegramLogger;
-        Connection connect = connect(botConfiguration.getDatabaseUrl(), botConfiguration.getDatabaseUser(), botConfiguration.getDatabasePassword());
-        dataSource = new StaticSource(connect);
     }
 
-
     @Override
-    public void start() {
+    public void start() throws LiquibaseException, SQLException {
+        LiquibaseHelper helper = new LiquibaseHelper(MASTER_CHANGE_LOG, getSource().getConnection(), "SCHEME");
+        helper.migrate();
         telegramBot.execute(new SetMyCommandsImpl(BotCommands.values()));
         telegramBot.setUpdatesListener(updates -> {
             for (Update update : updates) {
-                UpdateWrapper updateWrapper = new UpdateWrapper(update);
-                UserSession userSession = getOrCreateUserSession(updateWrapper);
                 try {
+                    UpdateWrapper updateWrapper = new UpdateWrapper(update);
+                    UserSession userSession = getOrCreateUserSession(updateWrapper);
                     userSession.processCommandAsync(updateWrapper);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
+                } catch (ShopBotException e) {
+                    logger.log(WARNING, "Session creation fail", e);
                 }
             }
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -76,11 +71,6 @@ public class ShopBotImpl implements ShopBot {
     }
 
     @Override
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
-    @Override
     public BotConfiguration getConfiguration() {
         return botConfiguration;
     }
@@ -95,18 +85,11 @@ public class ShopBotImpl implements ShopBot {
         return logger;
     }
 
-    private Connection connect(String url, String user, String password) {
-        Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(url, user, password);
-        } catch (SQLException e) {
-            getLogger().log(Level.WARNING, "Preview loading error", e);
-        }
-
-        return conn;
+    private Connection connect(String url, String user, String password) throws SQLException {
+        return DriverManager.getConnection(url, user, password);
     }
 
-    private UserSession getOrCreateUserSession(UpdateWrapper updateWrapper) {
+    private UserSession getOrCreateUserSession(UpdateWrapper updateWrapper) throws ShopBotException {
 
         Optional<Chat> chatOpt = updateWrapper.getChat();
         if (chatOpt.isEmpty()) {
@@ -118,13 +101,31 @@ public class ShopBotImpl implements ShopBot {
             throw new RuntimeException("Chat is null");
         }
 
-        Chat chat = chatOpt.get();
-        User user = userOpt.get();
-        UserSession userSession = userSessionMap.putIfAbsent(chat.id(), new UserSession(this, new PgBotUser(dataSource, user), chat));
+        long userId  = userOpt.get().id();
+        long chatId = chatOpt.get().id();
+        String username = userOpt.get().username();
+        if (!updateWrapper.isMessage())
+        {
+            userId  = chatOpt.get().id();
+            chatId = userOpt.get().id();
+            username = chatOpt.get().username();
+        }
+
+        Optional<? extends BotUser> orCreateUser = new PgUsers(this, getLogger()).findOrCreateUser(userId, username);
+        if (orCreateUser.isEmpty()) {
+            throw new ShopBotException("Unable to create the user.");
+        }
+        UserSession userSession = userSessionMap.putIfAbsent(userId, new UserSession(this, orCreateUser.get(), chatId));
         if (userSession == null) {
-            userSession = userSessionMap.get(chat.id());
+            userSession = userSessionMap.get(userId);
+            userSession.setName(username);
             userSession.start();
         }
         return userSession;
+    }
+
+    @Override
+    public DataSource getSource() throws SQLException {
+        return new PgSource(botConfiguration.getDatabaseUrl(), botConfiguration.getDatabaseUser(), botConfiguration.getDatabasePassword());
     }
 }

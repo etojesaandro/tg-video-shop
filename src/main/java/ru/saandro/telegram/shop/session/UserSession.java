@@ -21,25 +21,24 @@ import ru.saandro.telegram.shop.controller.UploadVideoController;
 import ru.saandro.telegram.shop.core.ScreenController;
 import ru.saandro.telegram.shop.core.ShopBot;
 import ru.saandro.telegram.shop.core.UpdateWrapper;
-import ru.saandro.telegram.shop.dao.PgBotUser;
+import ru.saandro.telegram.shop.persistence.entities.*;
 
 public class UserSession extends Thread {
 
     private final ShopBot bot;
 
-    private final PgBotUser user;
+    private final BotUser user;
 
-    private final Chat chat;
+    private final long chatId;
 
     private final BlockingQueue<UpdateWrapper> commandQueue = new LinkedBlockingQueue<>();
 
     private volatile ScreenController currentController;
 
-    public UserSession(ShopBot bot, PgBotUser user, Chat chat) {
-        this.chat = chat;
+    public UserSession(ShopBot bot, BotUser user, long chatId) {
+        this.chatId = chatId;
         this.user = user;
         this.bot = bot;
-        setName(chat.username());
     }
 
     public void processCommandAsync(UpdateWrapper update) throws InterruptedException {
@@ -86,20 +85,20 @@ public class UserSession extends Thread {
 
     public void switchTo(BotScreens home) {
         switch (home) {
-            case HOME -> currentController = new HomeScreenController(bot, this, chat.id());
-            case BUY_VIDEOS -> currentController = new BuyVideosController(bot, this, chat.id());
-            case MY_VIDEOS -> currentController = new MyVideosController(bot, this, chat.id());
-            case DONATE -> currentController = new DonateController(bot, this, chat.id());
+            case HOME -> currentController = new HomeScreenController(bot, this, chatId);
+            case BUY_VIDEOS -> currentController = new BuyVideosController(bot, this, chatId);
+            case MY_VIDEOS -> currentController = new MyVideosController(bot, this, chatId);
+            case DONATE -> currentController = new DonateController(bot, this, chatId);
 
-            case CONTROL_ROOM -> currentController = new ControlRoomController(bot, this, chat.id());
-            case UPLOAD_VIDEO -> currentController = new UploadVideoController(bot, this, chat.id());
-            case STATISTIC -> currentController = new StatisticController(bot, this, chat.id());
-            case PROMOTE -> currentController = new PromotionController(bot, this, chat.id());
+            case CONTROL_ROOM -> currentController = new ControlRoomController(bot, this, chatId);
+            case UPLOAD_VIDEO -> currentController = new UploadVideoController(bot, this, chatId);
+            case STATISTIC -> currentController = new StatisticController(bot, this, chatId);
+            case PROMOTE -> currentController = new PromotionController(bot, this, chatId);
         }
         currentController.onStart();
     }
 
-    public PgBotUser getUser() {
+    public BotUser getUser() {
         return user;
     }
 }

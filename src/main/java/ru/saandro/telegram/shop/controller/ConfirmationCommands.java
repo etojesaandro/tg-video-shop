@@ -1,18 +1,16 @@
 package ru.saandro.telegram.shop.controller;
 
 import java.util.Locale;
-import java.util.Optional;
 
-public enum ControlRoomCommands implements EnumWithDescription {
-    UPLOAD("\uD83C\uDFA5 Загрузить Видео"),
-    STATISTIC("\uD83D\uDCCA Статистика"),
-    PROMOTE("\uD83D\uDC6E\u200D♀️ Назначить Администратора"),
+public enum ConfirmationCommands implements EnumWithDescription {
+    YES("Да"),
+    NO("Нет"),
     BACK("⬅️ Назад");
 
     public final String name;
     public final String descr;
 
-    ControlRoomCommands(String descr) {
+    ConfirmationCommands(String descr) {
         this.name = name().toLowerCase(Locale.ROOT);
         this.descr = descr;
     }
@@ -29,6 +27,6 @@ public enum ControlRoomCommands implements EnumWithDescription {
 
     @Override
     public boolean isAdmin() {
-        return true;
+        return false;
     }
 }

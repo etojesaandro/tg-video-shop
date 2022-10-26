@@ -1,9 +1,9 @@
-package ru.saandro.telegram.shop.dao;
+package ru.saandro.telegram.shop.persistence.entities;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.core.*;
 
 public interface Item {
 
@@ -11,7 +11,7 @@ public interface Item {
 
     void sendContent(ShopBot bot, long chatId);
 
-    void store() throws IOException;
+    void store() throws ShopBotException;
 
     Path getContentPath();
 

@@ -18,6 +18,6 @@ public class DonateController extends AbstractScreenController {
 
     @Override
     public void onStart() {
-        prepareAndSendMenu("+79067657732 Сбербанк, в любое время.", BackCommand.class);
+        prepareAndSendMenu("+79067657732 Сбербанк, в любое время \uD83D\uDE4F \uD83D\uDE4F.", BackCommand.class);
     }
 }

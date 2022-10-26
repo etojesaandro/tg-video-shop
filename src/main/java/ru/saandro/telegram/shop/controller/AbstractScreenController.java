@@ -6,6 +6,7 @@ import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
+import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.SendMessage;
 
 import ru.saandro.telegram.shop.core.ScreenController;
@@ -32,6 +33,7 @@ public abstract class AbstractScreenController implements ScreenController {
     protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title, Class<E> enumClass) {
         EnumSet<E> es = EnumSet.allOf(enumClass);
         SendMessage message = new SendMessage(chatId, title);
+        message.parseMode(ParseMode.Markdown);
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         for (EnumWithDescription e : es) {
             if (e.isAdmin() && !session.getUser().isAdmin()) {
