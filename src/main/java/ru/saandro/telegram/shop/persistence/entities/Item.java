@@ -1,6 +1,5 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 import ru.saandro.telegram.shop.core.*;
@@ -16,4 +15,10 @@ public interface Item {
     Path getContentPath();
 
     Path getPreviewPath();
+
+    int getPrice();
+
+    Long getId();
+
+    String getDescription();
 }

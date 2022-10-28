@@ -11,6 +11,7 @@ import com.pengrad.telegrambot.request.SendMessage;
 
 import ru.saandro.telegram.shop.core.ScreenController;
 import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.persistence.entities.*;
 import ru.saandro.telegram.shop.session.UserSession;
 
 public abstract class AbstractScreenController implements ScreenController {
@@ -25,7 +26,7 @@ public abstract class AbstractScreenController implements ScreenController {
         this.chatId = chatId;
     }
 
-    protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title) {
+    protected void prepareAndSendMenu(String title) {
         SendMessage message = new SendMessage(chatId, title);
         bot.execute(message);
     }
@@ -41,6 +42,18 @@ public abstract class AbstractScreenController implements ScreenController {
             }
             markupInline.addRow(new InlineKeyboardButton(e.getDescription()).callbackData(e.getName()));
         }
+        message.replyMarkup(markupInline);
+        bot.execute(message);
+    }
+
+    protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title, Iterable<Markable> items) {
+        SendMessage message = new SendMessage(chatId, title);
+        message.parseMode(ParseMode.Markdown);
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        for (Markable markable : items) {
+            markupInline.addRow(new InlineKeyboardButton(markable.getDescription()).callbackData(markable.getName()));
+        }
+        markupInline.addRow(new InlineKeyboardButton(BackCommand.BACK.getDescription()).callbackData(BackCommand.BACK.getName()));
         message.replyMarkup(markupInline);
         bot.execute(message);
     }

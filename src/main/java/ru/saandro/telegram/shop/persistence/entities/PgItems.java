@@ -4,24 +4,26 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
-import javax.sql.DataSource;
-
 import com.google.common.collect.ImmutableList;
 import com.jcabi.jdbc.JdbcSession;
 import com.jcabi.jdbc.ListOutcome;
 
-import ru.saandro.telegram.shop.controller.EnumWithDescription;
-import ru.saandro.telegram.shop.controller.VideoGenres;
 import ru.saandro.telegram.shop.core.*;
 import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
 
 public class PgItems implements Items {
 
-    private final ShopBot provider;
+    public static final String ITEM_BY_GENRE_SQL = "SELECT i.id, i.title, i.description, i.author, g.id, i.price, i.preview_path, i.content_path FROM item i " +
+            "JOIN item_genre ig " +
+            "ON ig.item_id = i.id " +
+            "JOIN genre g " +
+            "ON g.id = ig.genre_id " +
+            "WHERE g.id = ?";
+
+    private final PersistenceProvider provider;
     private final SimpleTelegramLogger logger;
 
-    public PgItems(ShopBot provider, SimpleTelegramLogger logger)
-    {
+    public PgItems(PersistenceProvider provider, SimpleTelegramLogger logger) {
         this.provider = provider;
         this.logger = logger;
     }
@@ -44,7 +46,7 @@ public class PgItems implements Items {
                                             rset.getString(2),
                                             rset.getString(3),
                                             rset.getString(4),
-                                            EnumWithDescription.parse(rset.getString(5), VideoGenres.class).orElse(VideoGenres.ALL),
+                                            rset.getLong(5),
                                             rset.getInt(6),
                                             Paths.get(rset.getString(7)),
                                             Paths.get(rset.getString(8)))
@@ -57,32 +59,21 @@ public class PgItems implements Items {
     }
 
     @Override
-    public Iterable<Item> browseItemsByGenre(VideoGenres genre) {
+    public Iterable<Item> browseItemsByGenre(long genreId) {
         try {
-            String suffix = "";
-            if (genre != VideoGenres.ALL) {
-                suffix = "WHERE g.name = ?";
-            }
             JdbcSession sql = new JdbcSession(provider.getSource())
-                    .sql("SELECT i.id, i.title, i.description, g.name, i.price, i.preview_path, i.content_path FROM item i " +
-                            "JOIN item_by_genre ig" +
-                            "ON ig.item_id = i.id " +
-                            "JOIN genre g" +
-                            "ON g.id = ig.id" +
-                            suffix);
-            if (genre != VideoGenres.ALL) {
-                sql.set(genre.getName());
-            }
+                    .sql(ITEM_BY_GENRE_SQL);
+            sql.set(genreId);
             return sql.select(
                     new ListOutcome<>(
                             rset -> new PgItem(provider, rset.getLong(1),
                                     rset.getString(2),
                                     rset.getString(3),
                                     rset.getString(4),
-                                    EnumWithDescription.parse(rset.getString(5), VideoGenres.class).orElse(VideoGenres.ALL),
+                                    rset.getLong(5),
                                     rset.getInt(6),
                                     Paths.get(rset.getString(7)),
-                                            Paths.get(rset.getString(8)))
+                                    Paths.get(rset.getString(8)))
                     )
             );
         } catch (Exception e) {

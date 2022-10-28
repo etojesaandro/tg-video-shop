@@ -5,19 +5,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
-import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Message;
 
 import ru.saandro.telegram.shop.conf.BotCommands;
-import ru.saandro.telegram.shop.controller.BotScreens;
-import ru.saandro.telegram.shop.controller.BuyVideosController;
-import ru.saandro.telegram.shop.controller.ControlRoomController;
-import ru.saandro.telegram.shop.controller.DonateController;
-import ru.saandro.telegram.shop.controller.HomeScreenController;
-import ru.saandro.telegram.shop.controller.MyVideosController;
-import ru.saandro.telegram.shop.controller.PromotionController;
-import ru.saandro.telegram.shop.controller.StatisticController;
-import ru.saandro.telegram.shop.controller.UploadVideoController;
+import ru.saandro.telegram.shop.controller.*;
 import ru.saandro.telegram.shop.core.ScreenController;
 import ru.saandro.telegram.shop.core.ShopBot;
 import ru.saandro.telegram.shop.core.UpdateWrapper;
@@ -74,12 +65,10 @@ public class UserSession extends Thread {
             currentController.processMessage(message);
             return;
         }
-        switch (botCommand) {
-            case START:
-                switchTo(BotScreens.HOME);
-                break;
-            default:
-                bot.getLogger().log(Level.SEVERE, "Unexpected value: " + botCommand);
+        if (botCommand == BotCommands.START) {
+            switchTo(BotScreens.HOME);
+        } else {
+            bot.getLogger().log(Level.SEVERE, "Unexpected value: " + botCommand);
         }
     }
 
@@ -91,7 +80,9 @@ public class UserSession extends Thread {
             case DONATE -> currentController = new DonateController(bot, this, chatId);
 
             case CONTROL_ROOM -> currentController = new ControlRoomController(bot, this, chatId);
+
             case UPLOAD_VIDEO -> currentController = new UploadVideoController(bot, this, chatId);
+            case PROCESS_GENRE -> currentController = new ProcessGenreController(bot, this, chatId);
             case STATISTIC -> currentController = new StatisticController(bot, this, chatId);
             case PROMOTE -> currentController = new PromotionController(bot, this, chatId);
         }

@@ -13,7 +13,7 @@ import ru.saandro.telegram.shop.persistence.entities.*;
 
 import java.sql.*;
 
-public interface ShopBot {
+public interface ShopBot extends PersistenceProvider {
 
     void start() throws LiquibaseException, SQLException;
 
@@ -26,6 +26,4 @@ public interface ShopBot {
     String getToken();
 
     SimpleTelegramLogger getLogger();
-
-    DataSource getSource() throws SQLException;
 }

@@ -1,14 +1,13 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.logging.Level;
-
-import ru.saandro.telegram.shop.controller.ContentFile;
+import ru.saandro.telegram.shop.controller.*;
 import ru.saandro.telegram.shop.core.*;
-import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
+import ru.saandro.telegram.shop.logger.*;
 
+import java.io.*;
+import java.nio.file.*;
+
+import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
 
 public class ThickItem implements Item {
@@ -38,23 +37,35 @@ public class ThickItem implements Item {
 
     private ContentFile loadPreview() {
         return ContentFile.of(origin.getPreviewPath());
-
     }
 
     @Override
     public void sendPreviews(ShopBot bot, long chatId) {
-        if (Files.exists(origin.getPreviewPath())) {
-            SendVideo sendVideo = new SendVideo(chatId, origin.getPreviewPath().toFile());
-            bot.execute(sendVideo);
+        AbstractMultipartRequest<?> request = prepareRequest(chatId, origin.getPreviewPath());
+        if (request != null)
+        {
+            prepareRequest(bot, request);
         }
     }
 
     @Override
     public void sendContent(ShopBot bot, long chatId) {
-        if (Files.exists(origin.getContentPath())) {
-            SendVideo sendVideo = new SendVideo(chatId, origin.getContentPath().toFile());
-            bot.execute(sendVideo);
+        AbstractMultipartRequest<?> request = prepareRequest(chatId, origin.getContentPath());
+        if (request != null) {
+            prepareRequest(bot, request);
         }
+    }
+
+    private void prepareRequest(ShopBot bot, AbstractMultipartRequest<?> request) {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        markupInline.addRow(prepareBuyButton(origin.getPrice()));
+        request.replyMarkup(markupInline);
+
+        bot.execute(request);
+    }
+
+    private InlineKeyboardButton prepareBuyButton(int price) {
+        return new InlineKeyboardButton("Купить за " + price + " Jorge Coin").callbackData("buy_" + origin.getId());
     }
 
     @Override
@@ -73,6 +84,22 @@ public class ThickItem implements Item {
         origin.getContentPath();
     }
 
+    private AbstractMultipartRequest<?> prepareRequest(long chatId, Path previewPath) {
+        if (Files.exists(previewPath)) {
+            String fileExtension = com.google.common.io.Files.getFileExtension(previewPath.toString());
+            if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
+                SendPhoto sendPhoto = new SendPhoto(chatId, previewPath.toFile());
+                sendPhoto.caption(origin.getDescription());
+                return sendPhoto;
+            } else {
+                SendVideo sendVideo = new SendVideo(chatId, previewPath.toFile());
+                sendVideo.caption(origin.getDescription());
+                return sendVideo;
+            }
+        }
+        return null;
+    }
+
     private void saveFile(Path path, ContentFile contentFile) throws IOException {
         if (!Files.exists(path.getParent())) {
             Files.createDirectories(path.getParent());
@@ -88,5 +115,20 @@ public class ThickItem implements Item {
     @Override
     public Path getPreviewPath() {
         return origin.getPreviewPath();
+    }
+
+    @Override
+    public int getPrice() {
+        return origin.getPrice();
+    }
+
+    @Override
+    public Long getId() {
+        return origin.getId();
+    }
+
+    @Override
+    public String getDescription() {
+        return origin.getDescription();
     }
 }

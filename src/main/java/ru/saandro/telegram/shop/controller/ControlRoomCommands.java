@@ -5,6 +5,7 @@ import java.util.Optional;
 
 public enum ControlRoomCommands implements EnumWithDescription {
     UPLOAD("\uD83C\uDFA5 Загрузить Видео"),
+    PROCESS_GENRE("\uD83C\uDFA5 Добавить/Удалить Жанр"),
     STATISTIC("\uD83D\uDCCA Статистика"),
     PROMOTE("\uD83D\uDC6E\u200D♀️ Назначить Администратора"),
     BACK("⬅️ Назад");

@@ -7,6 +7,5 @@ public enum UploadState {
     PRICE,
     PREVIEW,
     CONTENT,
-    CONFIRMATION,
-    DONE
+    CONFIRMATION
 }

@@ -13,19 +13,20 @@ import com.jcabi.jdbc.*;
 
 public class PgUser implements BotUser {
 
-    private final ShopBot provider;
+    private final PersistenceProvider provider;
+
     private final long id;
     private final String name;
     private final long balance;
 
-    public PgUser(ShopBot provider, com.pengrad.telegrambot.model.User user) {
+    public PgUser(PersistenceProvider provider, com.pengrad.telegrambot.model.User user) {
         this.provider = provider;
         id = user.id();
         name = user.username();
         this.balance = 0;
     }
 
-    public PgUser(ShopBot provider, long uid, String name, int balance) {
+    public PgUser(PersistenceProvider provider, long uid, String name, int balance) {
         this.provider = provider;
         this.id = uid;
         this.name = name;
@@ -54,15 +55,14 @@ public class PgUser implements BotUser {
         return true;
     }
 
-    public Optional<? extends BotUser> create() {
+    public Optional<? extends BotUser> create() throws ShopBotException {
         try {
             DataSource source = provider.getSource();
             new JdbcSession(source)
                     .sql("INSERT INTO BOT_USER(ID, NAME ,BALANCE) VALUES(?,?,?)")
                     .set(id).set(name).set(0).execute();
         } catch (SQLException e) {
-            provider.getLogger().log(Level.WARNING, "Unable to create new user", e);
-            return Optional.empty();
+            throw new ShopBotException("Unable to create new user", e);
         }
         return Optional.of(this);
     }

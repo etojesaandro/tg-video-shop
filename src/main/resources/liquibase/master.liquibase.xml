@@ -8,7 +8,7 @@
     <changeSet id="2022-10-26_23-04" author="saandro" context="SCHEME">
 
         <createTable tableName="ITEM">
-            <column name="ID" type="BIGINT">
+            <column autoIncrement="true" name="ID" type="BIGINT">
                 <constraints primaryKey="true" primaryKeyName="PK_ITEM"/>
             </column>
             <column name="TITLE" type="VARCHAR(64)">
@@ -28,7 +28,7 @@
         </createTable>
 
         <createTable tableName="GENRE">
-            <column name="ID" type="BIGINT">
+            <column autoIncrement="true" name="ID" type="BIGINT">
                 <constraints primaryKey="true" primaryKeyName="PK_GENRE"/>
             </column>
             <column name="NAME" type="VARCHAR(255)">

@@ -9,6 +9,7 @@ public enum BotScreens
 
     CONTROL_ROOM,
     UPLOAD_VIDEO,
+    PROCESS_GENRE,
     STATISTIC,
     PROMOTE
 

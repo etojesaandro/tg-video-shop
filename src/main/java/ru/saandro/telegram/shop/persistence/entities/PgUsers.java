@@ -12,10 +12,10 @@ import com.jcabi.jdbc.*;
 
 public class PgUsers implements Users {
 
-    private final ShopBot provider;
+    private final PersistenceProvider provider;
     private final SimpleTelegramLogger logger;
 
-    public PgUsers(ShopBot provider, SimpleTelegramLogger logger) {
+    public PgUsers(PersistenceProvider provider, SimpleTelegramLogger logger) {
         this.provider = provider;
         this.logger = logger;
     }
@@ -43,7 +43,12 @@ public class PgUsers implements Users {
     public Optional<? extends BotUser> findOrCreateUser(Long userId, String name) {
         Optional<? extends BotUser> user = findUser(userId);
         if (user.isEmpty()) {
-            user = new PgUser(provider, userId, name, 0).create();
+
+            try {
+                user = new PgUser(provider, userId, name, 0).create();
+            } catch (ShopBotException e) {
+                return Optional.empty();
+            }
         }
         return user;
     }

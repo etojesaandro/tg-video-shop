@@ -3,7 +3,6 @@ package ru.saandro.telegram.shop.controller;
 import static ru.saandro.telegram.shop.controller.UploadState.CONFIRMATION;
 import static ru.saandro.telegram.shop.controller.UploadState.CONTENT;
 import static ru.saandro.telegram.shop.controller.UploadState.DESCRIPTION;
-import static ru.saandro.telegram.shop.controller.UploadState.DONE;
 import static ru.saandro.telegram.shop.controller.UploadState.GENRE;
 import static ru.saandro.telegram.shop.controller.UploadState.PREVIEW;
 import static ru.saandro.telegram.shop.controller.UploadState.PRICE;
@@ -13,6 +12,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.*;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -26,6 +26,7 @@ import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.response.GetFileResponse;
 
 import ru.saandro.telegram.shop.core.*;
+import ru.saandro.telegram.shop.persistence.entities.*;
 import ru.saandro.telegram.shop.session.UserSession;
 
 public class UploadVideoController extends AbstractScreenController {
@@ -74,9 +75,8 @@ public class UploadVideoController extends AbstractScreenController {
             }
         }
 
-
         if (uploadState == GENRE) {
-            itemBuilder.genre(EnumWithDescription.parse(data, VideoGenres.class).orElse(VideoGenres.ALL));
+            itemBuilder.genre(Long.parseLong(data));
             uploadState = PRICE;
             prepareAndSendMenu("Введите стоимость видео.", BackCommand.class);
         }
@@ -93,7 +93,12 @@ public class UploadVideoController extends AbstractScreenController {
             case DESCRIPTION -> {
                 itemBuilder.description(message.text());
                 uploadState = GENRE;
-                prepareAndSendMenu("Выберите жанр видео.", VideoGenres.class);
+                try {
+                    prepareAndSendMenu("Выберите жанр видео.", new PgGenres(bot).getAllGenres());
+                } catch (SQLException e) {
+                    bot.getLogger().log(Level.WARNING, "Unable to get Genres");
+                    prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.", BackCommand.class);
+                }
             }
 
             case PRICE -> {
@@ -139,12 +144,11 @@ public class UploadVideoController extends AbstractScreenController {
                 uploadState = CONFIRMATION;
                 prepareAndSendMenu("Всё готово! Подтверждаем загрузку?.", ConfirmationCommands.class);
             }
-            case CONFIRMATION, DONE -> uploadState = DONE;
         }
     }
 
     private ContentFile tryToReadFile(Message message) throws IOException {
-        GetFile getFile = null;
+        GetFile getFile;
         Video video = message.video();
         if (message.photo() != null) {
             PhotoSize[] photo = message.photo();
@@ -171,10 +175,6 @@ public class UploadVideoController extends AbstractScreenController {
         }
     }
 
-
-    private boolean isConfirmed(String text) {
-        return "Да".equalsIgnoreCase(text) || "Y".equalsIgnoreCase(text) || "Yes".equalsIgnoreCase(text);
-    }
 
     @Override
     public void onStart() {

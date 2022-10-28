@@ -17,48 +17,53 @@ public class ThickItemBuilder {
     private int price;
     private ContentFile preview;
     private ContentFile content;
-    private VideoGenres genre;
+    private Long genreId;
 
     public ThickItemBuilder(BotConfiguration configuration) {
         this.configuration = configuration;
     }
 
-    public void title(String title) {
-
+    public ThickItemBuilder title(String title) {
         this.title = title;
+        return this;
     }
 
-    public void description(String text) {
+    public ThickItemBuilder description(String text) {
         description = text;
+        return this;
     }
 
-    public void price(int price) {
+    public ThickItemBuilder genre(Long genreId) {
+        this.genreId = genreId;
+        return this;
+    }
+
+    public ThickItemBuilder price(int price) {
         this.price = price;
+        return this;
     }
 
-    public void preview(ContentFile preview) {
+    public ThickItemBuilder preview(ContentFile preview) {
         this.preview = preview;
+        return this;
     }
 
-    public void content(ContentFile content) {
+    public ThickItemBuilder content(ContentFile content) {
         this.content = content;
+        return this;
     }
 
-    public Item build(ShopBot provider, String userName, SimpleTelegramLogger logger) {
+    public Item build(PersistenceProvider provider, String userName, SimpleTelegramLogger logger) {
         return new ThickItem(
-                new PgItem(provider, null, title, description, userName, genre, price, getPreviewPath(), getContentPath()), logger,
+                new PgItem(provider, null, title, description, userName, genreId, price, getPreviewPath(), getContentPath()), logger,
                 preview, content);
     }
 
     private Path getPreviewPath() {
-        return configuration.getPreviewStoragePath().resolve(genre.name).resolve(preview.file.fileUniqueId() + "." + preview.getExtention());
+        return configuration.getPreviewStoragePath().resolve(genreId + "").resolve(preview.file.fileUniqueId() + "." + preview.getExtention());
     }
 
     private Path getContentPath() {
-        return configuration.getContentStoragePath().resolve(genre.name).resolve(content.file.fileUniqueId() + "." + content.getExtention());
-    }
-
-    public void genre(VideoGenres genre) {
-        this.genre = genre;
+        return configuration.getContentStoragePath().resolve(genreId + "").resolve(content.file.fileUniqueId() + "." + content.getExtention());
     }
 }

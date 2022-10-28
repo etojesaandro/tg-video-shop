@@ -21,18 +21,11 @@ public class ControlRoomController extends AbstractScreenController {
             return;
         }
         switch (parse.get()) {
-            case UPLOAD -> {
-                session.switchTo(BotScreens.UPLOAD_VIDEO);
-            }
-            case STATISTIC -> {
-                session.switchTo(BotScreens.STATISTIC);
-            }
-            case PROMOTE -> {
-                session.switchTo(BotScreens.PROMOTE);
-            }
-            case BACK -> {
-                session.switchTo(BotScreens.HOME);
-            }
+            case UPLOAD -> session.switchTo(BotScreens.UPLOAD_VIDEO);
+            case PROCESS_GENRE -> session.switchTo(BotScreens.PROCESS_GENRE);
+            case STATISTIC -> session.switchTo(BotScreens.STATISTIC);
+            case PROMOTE -> session.switchTo(BotScreens.PROMOTE);
+            case BACK -> session.switchTo(BotScreens.HOME);
             default -> throw new IllegalStateException("Unexpected value: " + parse.get());
         }
     }

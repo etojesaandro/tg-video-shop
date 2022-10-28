@@ -9,5 +9,9 @@ public interface BotUser {
     boolean isAdmin();
 
     String name();
+
+    long id();
+
+    long balance();
 }
 

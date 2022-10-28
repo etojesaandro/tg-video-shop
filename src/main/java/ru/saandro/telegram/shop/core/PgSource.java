@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-final class PgSource implements DataSource {
+public final class PgSource implements DataSource {
 
     /**
      * H2 driver.
@@ -24,7 +24,7 @@ final class PgSource implements DataSource {
      * Public ctor.
      * @param connectionString DB connectionString
      */
-    PgSource(final String connectionString, String user, String password) {
+    public PgSource(final String connectionString, String user, String password) {
         this.connectionString = connectionString;
         this.user = user;
         this.password = password;

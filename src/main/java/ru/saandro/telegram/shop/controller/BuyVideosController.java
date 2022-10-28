@@ -1,6 +1,8 @@
 package ru.saandro.telegram.shop.controller;
 
+import java.sql.*;
 import java.util.Optional;
+import java.util.logging.*;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
 
@@ -16,31 +18,19 @@ public class BuyVideosController extends AbstractScreenController {
 
     @Override
     public void processCallback(CallbackQuery callbackQuery) {
-        Optional<VideoGenres> parse = EnumWithDescription.parse(callbackQuery.data(), VideoGenres.class);
-        if (parse.isEmpty()) {
+        String data = callbackQuery.data();
+        if (EnumWithDescription.parse(callbackQuery.data(), BackCommand.class).isPresent()) {
+            session.switchTo(BotScreens.HOME);
             return;
         }
-        switch (parse.get()) {
-            case FOOT -> onFootVideos();
-            case SCARFING -> onScarfingVideos();
-            case ALL -> onAllVideos();
-            case BACK -> {
-                session.switchTo(BotScreens.HOME);
-            }
+        try
+        {
+            sendTheListOfItems(new PgItems(bot, bot.getLogger()).browseItemsByGenre(Long.parseLong(data)));
+        } catch (NumberFormatException e)
+        {
+            bot.getLogger().log(Level.WARNING, "Incorrect Genre id", e );
+            prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну и напишите мне, что я облажался хд.");
         }
-    }
-
-    private void onAllVideos() {
-        sendTheListOfItems(new PgItems(bot, bot.getLogger()).browseItemsByGenre(VideoGenres.ALL));
-    }
-
-    private void onScarfingVideos() {
-        BotUser user = session.getUser();
-        sendTheListOfItems(new PgItems(bot, bot.getLogger()).browseItemsByGenre(VideoGenres.SCARFING));
-    }
-
-    private void onFootVideos() {
-        sendTheListOfItems(new PgItems(bot, bot.getLogger()).browseItemsByGenre(VideoGenres.FOOT));
     }
 
     private void sendTheListOfItems(Iterable<Item> items) {
@@ -51,6 +41,15 @@ public class BuyVideosController extends AbstractScreenController {
 
     @Override
     public void onStart() {
-        prepareAndSendMenu("Чего желаете? ", VideoGenres.class);
+        try {
+            Optional<? extends BotUser> user = new PgUsers(bot, bot.getLogger()).findUser(session.getUser().id());
+            if (user.isPresent())
+            {
+                prepareAndSendMenu("Ваш баланс: " + user.get().balance() + ". Чего желаете? ", new PgGenres(bot).getAllGenres());
+            }
+        } catch (SQLException e) {
+            bot.getLogger().log(Level.WARNING, "Unable to get Genres", e);
+            prepareAndSendMenu("Сервис временно недоступен");
+        }
     }
 }
