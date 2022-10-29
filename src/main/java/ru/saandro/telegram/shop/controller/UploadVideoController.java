@@ -1,12 +1,9 @@
 package ru.saandro.telegram.shop.controller;
 
-import static ru.saandro.telegram.shop.controller.UploadState.CONFIRMATION;
-import static ru.saandro.telegram.shop.controller.UploadState.CONTENT;
-import static ru.saandro.telegram.shop.controller.UploadState.DESCRIPTION;
-import static ru.saandro.telegram.shop.controller.UploadState.GENRE;
-import static ru.saandro.telegram.shop.controller.UploadState.PREVIEW;
-import static ru.saandro.telegram.shop.controller.UploadState.PRICE;
-import static ru.saandro.telegram.shop.controller.UploadState.TITLE;
+import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.persistence.entities.CachedGenre;
+import ru.saandro.telegram.shop.persistence.entities.CachedPgGenres;
+import ru.saandro.telegram.shop.session.UserSession;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,9 +21,13 @@ import com.pengrad.telegrambot.model.Video;
 import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.response.GetFileResponse;
 
-import ru.saandro.telegram.shop.core.*;
-import ru.saandro.telegram.shop.persistence.entities.*;
-import ru.saandro.telegram.shop.session.UserSession;
+import static ru.saandro.telegram.shop.controller.UploadState.CONFIRMATION;
+import static ru.saandro.telegram.shop.controller.UploadState.CONTENT;
+import static ru.saandro.telegram.shop.controller.UploadState.DESCRIPTION;
+import static ru.saandro.telegram.shop.controller.UploadState.GENRE;
+import static ru.saandro.telegram.shop.controller.UploadState.PREVIEW;
+import static ru.saandro.telegram.shop.controller.UploadState.PRICE;
+import static ru.saandro.telegram.shop.controller.UploadState.TITLE;
 
 public class UploadVideoController extends AbstractScreenController {
 
@@ -52,8 +53,7 @@ public class UploadVideoController extends AbstractScreenController {
             return;
         }
 
-        if (uploadState == CONFIRMATION)
-        {
+        if (uploadState == CONFIRMATION) {
             Optional<ConfirmationCommands> confirmedOpt = EnumWithDescription.parse(data, ConfirmationCommands.class);
             if (confirmedOpt.isPresent()) {
                 ConfirmationCommands confirmationCommands = confirmedOpt.get();
@@ -76,9 +76,12 @@ public class UploadVideoController extends AbstractScreenController {
         }
 
         if (uploadState == GENRE) {
-            itemBuilder.genre(Long.parseLong(data));
-            uploadState = PRICE;
-            prepareAndSendMenu("Введите стоимость видео.", BackCommand.class);
+            Optional<CachedGenre> genreOptional = new CachedPgGenres(bot.getSource()).getGenreById(Long.parseLong(data));
+            if (genreOptional.isPresent()) {
+                itemBuilder.genre(genreOptional.get());
+                uploadState = PRICE;
+                prepareAndSendMenu("Введите стоимость видео.", BackCommand.class);
+            }
         }
     }
 

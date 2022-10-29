@@ -18,11 +18,14 @@ public class CachedPgUsers implements Users {
     @Override
     public Optional<? extends BotUser> findUser(long userId) throws IOException {
         try {
-            List<PgUser> selectionResult = new JdbcSession(dataSource)
+            List<BotUser> selectionResult = new JdbcSession(dataSource)
                     .sql("SELECT * FROM BOT_USER WHERE ID = ?")
                     .set(userId)
                     .select(new ListOutcome<>(
-                            rset -> new PgUser(dataSource, rset.getLong(1))
+                            rset -> new CachedUser(new PgUser(dataSource, rset.getLong(1)),
+                                    rset.getString(2),
+                                    rset.getInt(3),
+                                    rset.getBoolean(4))
 
                     ));
             return selectionResult.stream().findFirst();

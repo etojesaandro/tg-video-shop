@@ -11,5 +11,5 @@ public interface Items {
 
     Iterable<Item> getPurchasedItemsByUser(long userId) throws IOException;
 
-    Item add(String title, String description, String author, Integer price, String previewPath, String contentPath) throws IOException;
+    Item add(String title, String description, String author, Integer price, String previewPath, String contentPath, Genre genre) throws IOException;
 }

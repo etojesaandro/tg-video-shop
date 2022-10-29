@@ -1,12 +1,10 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
 import java.io.*;
-import java.nio.file.Path;
 
 import ru.saandro.telegram.shop.core.*;
 
 import com.pengrad.telegrambot.request.*;
-import com.pengrad.telegrambot.response.*;
 
 public interface Item {
 
@@ -29,4 +27,5 @@ public interface Item {
     String contentPath() throws IOException;
 
 
+    Genre genre() throws IOException;
 }

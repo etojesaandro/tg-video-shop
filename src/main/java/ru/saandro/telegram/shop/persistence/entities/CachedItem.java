@@ -15,8 +15,9 @@ public class CachedItem implements Item {
     private final Integer price;
     private final String previewPath;
     private final String contentPath;
+    private final Genre genre;
 
-    public CachedItem(Item item, String title, String description, String author, Integer price, String previewPath, String contentPath) {
+    public CachedItem(Item item, String title, String description, String author, Integer price, String previewPath, String contentPath, Genre genre) {
         this.origin = item;
         this.title = title;
         this.description = description;
@@ -24,6 +25,7 @@ public class CachedItem implements Item {
         this.price = price;
         this.previewPath = previewPath;
         this.contentPath = contentPath;
+        this.genre = genre;
     }
 
     @Override
@@ -69,5 +71,10 @@ public class CachedItem implements Item {
     @Override
     public String contentPath() throws IOException {
         return contentPath;
+    }
+
+    @Override
+    public Genre genre() throws IOException {
+        return genre;
     }
 }

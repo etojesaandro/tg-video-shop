@@ -26,8 +26,8 @@ public class ThickItems implements Items {
     }
 
     @Override
-    public Item add(String title, String description, String author, Integer price, String previewPath, String contentPath) throws IOException {
-        Item add = origin.add(title, description, author, price, previewPath, contentPath);
+    public Item add(String title, String description, String author, Integer price, String previewPath, String contentPath, Genre genre) throws IOException {
+        Item add = origin.add(title, description, author, price, previewPath, contentPath, genre);
         saveFile(Paths.get(previewPath));
         saveFile(Paths.get(contentPath));
         return add;

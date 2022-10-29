@@ -3,18 +3,14 @@ package ru.saandro.telegram.shop.persistence.entities;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 import com.jcabi.jdbc.JdbcSession;
 import com.jcabi.jdbc.ListOutcome;
 import com.jcabi.jdbc.SingleOutcome;
 
-public class CachedPgGenres implements Genres {
-
-    private final DataSource dataSource;
-
-    public CachedPgGenres(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
+public record CachedPgGenres(DataSource dataSource) implements Genres {
 
     @Override
     public Iterable<Genre> getAllGenres() throws IOException {
@@ -42,9 +38,31 @@ public class CachedPgGenres implements Genres {
         }
     }
 
-    public void deleteGenreById(long id) throws SQLException {
-        new JdbcSession(dataSource)
-                .sql("DELETE FROM GENRE WHERE ID = ?")
-                .set(id).execute();
+    @Override
+    public void deleteGenreById(long id) throws IOException {
+        try {
+            new JdbcSession(dataSource)
+                    .sql("DELETE FROM GENRE WHERE ID = ?")
+                    .set(id).execute();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public Optional<CachedGenre> getGenreById(long id) throws IOException {
+        try {
+            List<CachedGenre> select = new JdbcSession(dataSource)
+                    .sql("SELECT FROM GENRE WHERE ID = ?")
+                    .set(id)
+                    .select(new ListOutcome<>(
+                                    rset -> new CachedGenre(new PgGenre(dataSource, rset.getLong(1)),
+                                            rset.getString(2))
+                            )
+                    );
+            return select.stream().findFirst();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 }

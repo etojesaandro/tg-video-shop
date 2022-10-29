@@ -19,7 +19,7 @@ public class ThickItemBuilder {
     private Integer price;
     private ContentFile preview;
     private ContentFile content;
-    private Long genreId;
+    private Genre genre;
 
     public ThickItemBuilder(BotConfiguration configuration) {
         this.configuration = configuration;
@@ -35,8 +35,8 @@ public class ThickItemBuilder {
         return this;
     }
 
-    public ThickItemBuilder genre(Long genreId) {
-        this.genreId = genreId;
+    public ThickItemBuilder genre(Genre genre) {
+        this.genre = genre;
         return this;
     }
 
@@ -56,14 +56,14 @@ public class ThickItemBuilder {
     }
 
     public Item buildAndStore(DataSource dataSource, String userName, SimpleTelegramLogger logger) throws IOException {
-        return new ThickItem(new CachedPgItems(dataSource).add(title, description, userName, price, getPreviewPath(), getContentPath()));
+        return new ThickItem(new CachedPgItems(dataSource).add(title, description, userName, price, getPreviewPath(), getContentPath(), genre));
     }
 
     private String getPreviewPath() {
-        return configuration.getPreviewStoragePath().resolve(genreId + "").resolve(preview.file.fileUniqueId() + "." + preview.getExtention()).toString();
+        return configuration.getPreviewStoragePath().resolve(genre.id() + "").resolve(preview.file.fileUniqueId() + "." + preview.getExtention()).toString();
     }
 
     private String getContentPath() {
-        return configuration.getContentStoragePath().resolve(genreId + "").resolve(content.file.fileUniqueId() + "." + content.getExtention()).toString();
+        return configuration.getContentStoragePath().resolve(genre.id() + "").resolve(content.file.fileUniqueId() + "." + content.getExtention()).toString();
     }
 }

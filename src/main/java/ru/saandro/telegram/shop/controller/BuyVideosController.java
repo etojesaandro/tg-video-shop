@@ -88,6 +88,11 @@ public class BuyVideosController extends AbstractScreenController {
         try {
             currentGenre = Long.parseLong(data);
             currentItems = new CachedPgItems(bot.getSource()).browseItemsByGenre(currentGenre);
+            if (!currentItems.iterator().hasNext())
+            {
+                prepareAndSendMenu("Таких видео ещё нет! Выберите другой жанр..");
+                return;
+            }
             sendTheListOfItems(currentItems);
             state = BuyVideoState.SELECT_VIDEO;
         } catch (NumberFormatException e) {

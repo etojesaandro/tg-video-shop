@@ -77,6 +77,11 @@ public class ThickItem implements Item, ItemSender {
     }
 
     @Override
+    public Genre genre() throws IOException {
+        return origin.genre();
+    }
+
+    @Override
     public String previewPath() throws IOException {
         return origin.previewPath();
     }
