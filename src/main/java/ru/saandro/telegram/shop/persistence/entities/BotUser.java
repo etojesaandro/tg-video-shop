@@ -13,5 +13,7 @@ public interface BotUser {
     long id();
 
     long balance();
+
+    void purchaseItem(Item itemToPurchase);
 }
 

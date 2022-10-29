@@ -7,7 +7,6 @@ import java.sql.*;
 import java.util.*;
 
 import com.jcabi.jdbc.*;
-import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
 
 public class PgItem implements Item {
@@ -46,19 +45,12 @@ public class PgItem implements Item {
         this.contentPath = other.contentPath;
     }
 
-    public void sendPreviews(ShopBot bot, long chatId) {
-        if (Files.exists(previewPath)) {
-            SendVideo sendVideo = new SendVideo(chatId, previewPath.toFile());
-            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-            markupInline.addRow(new InlineKeyboardButton("Купить за " + price).callbackData("buy_" + id));
-            sendVideo.replyMarkup(markupInline);
-            bot.execute(sendVideo);
-        }
-        SendMessage message = new SendMessage(chatId, prepareTheMessage());
-        bot.execute(message);
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) {
+        return new SendMessage(chatId, prepareTheMessage());
     }
 
-    public void sendContent(ShopBot bot, long chatId) {
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> sendContent(ShopBot bot, long chatId) {
+        return new SendMessage(chatId, prepareTheMessage());
     }
 
     @Override
@@ -99,6 +91,11 @@ public class PgItem implements Item {
     @Override
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
     }
 
     @Override

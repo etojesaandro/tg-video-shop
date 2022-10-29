@@ -46,6 +46,11 @@ public class PgUser implements BotUser {
     }
 
     @Override
+    public void purchaseItem(Item itemToPurchase) {
+
+    }
+
+    @Override
     public List<PgItem> getPurchasedItems() {
         return ImmutableList.of();
     }

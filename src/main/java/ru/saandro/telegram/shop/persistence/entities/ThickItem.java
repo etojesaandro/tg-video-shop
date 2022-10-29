@@ -9,6 +9,7 @@ import java.nio.file.*;
 
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
+import com.pengrad.telegrambot.response.*;
 
 public class ThickItem implements Item {
 
@@ -40,32 +41,13 @@ public class ThickItem implements Item {
     }
 
     @Override
-    public void sendPreviews(ShopBot bot, long chatId) {
-        AbstractMultipartRequest<?> request = prepareRequest(chatId, origin.getPreviewPath());
-        if (request != null)
-        {
-            prepareRequest(bot, request);
-        }
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) {
+        return prepareRequest(chatId, origin.getPreviewPath());
     }
 
     @Override
-    public void sendContent(ShopBot bot, long chatId) {
-        AbstractMultipartRequest<?> request = prepareRequest(chatId, origin.getContentPath());
-        if (request != null) {
-            prepareRequest(bot, request);
-        }
-    }
-
-    private void prepareRequest(ShopBot bot, AbstractMultipartRequest<?> request) {
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        markupInline.addRow(prepareBuyButton(origin.getPrice()));
-        request.replyMarkup(markupInline);
-
-        bot.execute(request);
-    }
-
-    private InlineKeyboardButton prepareBuyButton(int price) {
-        return new InlineKeyboardButton("Купить за " + price + " Jorge Coin").callbackData("buy_" + origin.getId());
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> sendContent(ShopBot bot, long chatId) {
+        return prepareRequest(chatId, origin.getContentPath());
     }
 
     @Override
@@ -125,6 +107,11 @@ public class ThickItem implements Item {
     @Override
     public Long getId() {
         return origin.getId();
+    }
+
+    @Override
+    public String getTitle() {
+        return origin.getTitle();
     }
 
     @Override

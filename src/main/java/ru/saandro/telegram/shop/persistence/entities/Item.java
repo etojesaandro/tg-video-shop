@@ -4,11 +4,14 @@ import java.nio.file.Path;
 
 import ru.saandro.telegram.shop.core.*;
 
+import com.pengrad.telegrambot.request.*;
+import com.pengrad.telegrambot.response.*;
+
 public interface Item {
 
-    void sendPreviews(ShopBot bot, long chatId);
+    AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId);
 
-    void sendContent(ShopBot bot, long chatId);
+    AbstractSendRequest<? extends AbstractSendRequest<?>> sendContent(ShopBot bot, long chatId);
 
     void store() throws ShopBotException;
 
@@ -19,6 +22,8 @@ public interface Item {
     int getPrice();
 
     Long getId();
+
+    String getTitle();
 
     String getDescription();
 }

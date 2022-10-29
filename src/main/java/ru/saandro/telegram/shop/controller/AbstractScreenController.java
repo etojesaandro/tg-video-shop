@@ -40,7 +40,7 @@ public abstract class AbstractScreenController implements ScreenController {
             if (e.isAdmin() && !session.getUser().isAdmin()) {
                 continue;
             }
-            markupInline.addRow(new InlineKeyboardButton(e.getDescription()).callbackData(e.getName()));
+            markupInline.addRow(createButton(e));
         }
         message.replyMarkup(markupInline);
         bot.execute(message);
@@ -53,9 +53,13 @@ public abstract class AbstractScreenController implements ScreenController {
         for (Markable markable : items) {
             markupInline.addRow(new InlineKeyboardButton(markable.getDescription()).callbackData(markable.getName()));
         }
-        markupInline.addRow(new InlineKeyboardButton(BackCommand.BACK.getDescription()).callbackData(BackCommand.BACK.getName()));
+        markupInline.addRow(createButton(BackCommand.BACK));
         message.replyMarkup(markupInline);
         bot.execute(message);
+    }
+
+    protected InlineKeyboardButton createButton(EnumWithDescription e) {
+        return new InlineKeyboardButton(e.getDescription()).callbackData(e.getName());
     }
 
     @Override
