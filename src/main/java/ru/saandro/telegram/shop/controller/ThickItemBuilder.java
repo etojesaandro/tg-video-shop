@@ -1,12 +1,14 @@
 package ru.saandro.telegram.shop.controller;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import javax.sql.DataSource;
 
 import ru.saandro.telegram.shop.conf.BotConfiguration;
 import ru.saandro.telegram.shop.core.*;
 import ru.saandro.telegram.shop.persistence.entities.*;
 import ru.saandro.telegram.shop.logger.SimpleTelegramLogger;
+
+import javax.sql.DataSource;
 
 public class ThickItemBuilder {
 
@@ -14,7 +16,7 @@ public class ThickItemBuilder {
 
     private String title;
     private String description;
-    private int price;
+    private Integer price;
     private ContentFile preview;
     private ContentFile content;
     private Long genreId;
@@ -38,7 +40,7 @@ public class ThickItemBuilder {
         return this;
     }
 
-    public ThickItemBuilder price(int price) {
+    public ThickItemBuilder price(Integer price) {
         this.price = price;
         return this;
     }
@@ -53,17 +55,15 @@ public class ThickItemBuilder {
         return this;
     }
 
-    public Item build(PersistenceProvider provider, String userName, SimpleTelegramLogger logger) {
-        return new ThickItem(
-                new PgItem(provider, null, title, description, userName, genreId, price, getPreviewPath(), getContentPath()), logger,
-                preview, content);
+    public Item buildAndStore(DataSource dataSource, String userName, SimpleTelegramLogger logger) throws IOException {
+        return new ThickItem(new CachedPgItems(dataSource).add(title, description, userName, price, getPreviewPath(), getContentPath()));
     }
 
-    private Path getPreviewPath() {
-        return configuration.getPreviewStoragePath().resolve(genreId + "").resolve(preview.file.fileUniqueId() + "." + preview.getExtention());
+    private String getPreviewPath() {
+        return configuration.getPreviewStoragePath().resolve(genreId + "").resolve(preview.file.fileUniqueId() + "." + preview.getExtention()).toString();
     }
 
-    private Path getContentPath() {
-        return configuration.getContentStoragePath().resolve(genreId + "").resolve(content.file.fileUniqueId() + "." + content.getExtention());
+    private String getContentPath() {
+        return configuration.getContentStoragePath().resolve(genreId + "").resolve(content.file.fileUniqueId() + "." + content.getExtention()).toString();
     }
 }

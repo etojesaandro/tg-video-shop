@@ -1,5 +1,6 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
+import java.io.*;
 import java.nio.file.Path;
 
 import ru.saandro.telegram.shop.core.*;
@@ -9,21 +10,23 @@ import com.pengrad.telegrambot.response.*;
 
 public interface Item {
 
-    AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId);
+    AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) throws IOException;
 
-    AbstractSendRequest<? extends AbstractSendRequest<?>> sendContent(ShopBot bot, long chatId);
+    AbstractSendRequest<? extends AbstractSendRequest<?>> prepareContent(ShopBot bot, long chatId) throws IOException;
 
-    void store() throws ShopBotException;
+    Long id();
 
-    Path getContentPath();
+    String title() throws IOException;
 
-    Path getPreviewPath();
+    String description() throws IOException;
 
-    int getPrice();
+    String author() throws IOException;
 
-    Long getId();
+    Integer price() throws IOException;
 
-    String getTitle();
+    String previewPath() throws IOException;
 
-    String getDescription();
+    String contentPath() throws IOException;
+
+
 }

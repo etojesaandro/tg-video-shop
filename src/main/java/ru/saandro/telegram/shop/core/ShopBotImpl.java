@@ -8,6 +8,7 @@ import ru.saandro.telegram.shop.persistence.entities.*;
 import ru.saandro.telegram.shop.session.*;
 
 import javax.sql.*;
+import java.io.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -50,9 +51,7 @@ public class ShopBotImpl implements ShopBot {
                     UpdateWrapper updateWrapper = new UpdateWrapper(update);
                     UserSession userSession = getOrCreateUserSession(updateWrapper);
                     userSession.processCommandAsync(updateWrapper);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                } catch (ShopBotException e) {
+                } catch (Exception e) {
                     logger.log(WARNING, "Session creation fail", e);
                 }
             }
@@ -89,7 +88,7 @@ public class ShopBotImpl implements ShopBot {
         return DriverManager.getConnection(url, user, password);
     }
 
-    private UserSession getOrCreateUserSession(UpdateWrapper updateWrapper) throws ShopBotException {
+    private UserSession getOrCreateUserSession(UpdateWrapper updateWrapper) throws IOException {
 
         Optional<Chat> chatOpt = updateWrapper.getChat();
         if (chatOpt.isEmpty()) {
@@ -111,11 +110,9 @@ public class ShopBotImpl implements ShopBot {
             username = chatOpt.get().username();
         }
 
-        Optional<? extends BotUser> orCreateUser = new PgUsers(this, getLogger()).findOrCreateUser(userId, username);
-        if (orCreateUser.isEmpty()) {
-            throw new ShopBotException("Unable to create the user.");
-        }
-        UserSession userSession = userSessionMap.putIfAbsent(userId, new UserSession(this, orCreateUser.get(), chatId));
+        BotUser user = new CachedPgUsers(getSource()).findOrCreateUser(userId, username);
+
+        UserSession userSession = userSessionMap.putIfAbsent(userId, new UserSession(this, user, chatId));
         if (userSession == null) {
             userSession = userSessionMap.get(userId);
             userSession.setName(username);
@@ -125,7 +122,7 @@ public class ShopBotImpl implements ShopBot {
     }
 
     @Override
-    public DataSource getSource() throws SQLException {
+    public DataSource getSource() {
         return new PgSource(botConfiguration.getDatabaseUrl(), botConfiguration.getDatabaseUser(), botConfiguration.getDatabasePassword());
     }
 }

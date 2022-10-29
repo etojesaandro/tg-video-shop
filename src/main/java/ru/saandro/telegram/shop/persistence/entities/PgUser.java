@@ -1,74 +1,117 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
-import ru.saandro.telegram.shop.core.*;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.SQLException;
 
-import javax.sql.*;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.*;
-
-import com.google.common.collect.*;
-import com.jcabi.jdbc.*;
+import com.jcabi.jdbc.JdbcSession;
+import com.jcabi.jdbc.SingleOutcome;
 
 
 public class PgUser implements BotUser {
 
-    private final PersistenceProvider provider;
-
+    private final DataSource dataSource;
     private final long id;
-    private final String name;
-    private final long balance;
 
-    public PgUser(PersistenceProvider provider, com.pengrad.telegrambot.model.User user) {
-        this.provider = provider;
-        id = user.id();
-        name = user.username();
-        this.balance = 0;
+    public PgUser(DataSource dataSource, Long id) {
+        this.dataSource = dataSource;
+        this.id = id;
     }
 
-    public PgUser(PersistenceProvider provider, long uid, String name, int balance) {
-        this.provider = provider;
-        this.id = uid;
-        this.name = name;
-        this.balance = balance;
-    }
-
-    public long id() {
+    @Override
+    public Long id() {
         return id;
     }
 
-    public String name() {
-        return name;
-    }
-
-    public long balance() {
-        return balance;
-    }
-
     @Override
-    public void purchaseItem(Item itemToPurchase) {
-
-    }
-
-    @Override
-    public List<PgItem> getPurchasedItems() {
-        return ImmutableList.of();
-    }
-
-    @Override
-    public boolean isAdmin() {
-        return true;
-    }
-
-    public Optional<? extends BotUser> create() throws ShopBotException {
+    public String name() throws IOException {
         try {
-            DataSource source = provider.getSource();
-            new JdbcSession(source)
-                    .sql("INSERT INTO BOT_USER(ID, NAME ,BALANCE) VALUES(?,?,?)")
-                    .set(id).set(name).set(0).execute();
+            return new JdbcSession(dataSource)
+                    .sql("SELECT name FROM bot_user WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(String.class));
         } catch (SQLException e) {
-            throw new ShopBotException("Unable to create new user", e);
+            throw new IOException(e);
         }
-        return Optional.of(this);
+    }
+
+    @Override
+    public Integer balance() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT balance FROM bot_user WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(Integer.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public boolean admin() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT admin FROM bot_user WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(Boolean.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public void purchaseItem(Item itemToPurchase) throws IOException {
+        try {
+            new JdbcSession(dataSource)
+                    .sql("INSERT INTO BOT_USER_ITEM(BOT_USER_ID, ITEM_ID) VALUES(?,?)")
+                    .set(id()).set(itemToPurchase.id()).execute();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public BotUser updateBalance(Integer balance) throws IOException {
+        try {
+            new JdbcSession(dataSource)
+                    .sql("UPDATE BOT_USER " +
+                            "SET BALANCE = ? " +
+                            "WHERE ID = ?")
+                    .set(balance).set(id)
+                    .execute();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+        return this;
+    }
+
+    @Override
+    public BotUser promote() throws IOException {
+        try {
+            new JdbcSession(dataSource)
+                    .sql("UPDATE BOT_USER " +
+                            "SET ADMIN = ? " +
+                            "WHERE ID = ?")
+                    .set(true).set(id)
+                    .execute();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+        return this;
+    }
+
+    @Override
+    public boolean hasItem(Item item) throws IOException {
+
+        try {
+            Long select = new JdbcSession(dataSource)
+                    .sql("SELECT ID FROM BOT_USER_ITEM " +
+                            "WHERE BOT_USER_ID = ? " +
+                            "AND ITEM_ID = ?").set(id).set(item.id())
+                    .select(new SingleOutcome<>(Long.class));
+            return select != null;
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 }

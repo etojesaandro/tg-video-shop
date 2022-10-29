@@ -1,7 +1,9 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
-public interface Markable {
-    String getName();
+import java.io.*;
 
-    String getDescription();
+public interface Markable {
+    String getMarkableName();
+
+    String getMarkableDescription() throws IOException;
 }

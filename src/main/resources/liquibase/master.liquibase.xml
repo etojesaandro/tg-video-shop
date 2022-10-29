@@ -36,7 +36,6 @@
             </column>
         </createTable>
 
-
         <createTable tableName="ITEM_GENRE">
             <column autoIncrement="true" name="ID" type="BIGINT">
                 <constraints primaryKey="true" primaryKeyName="PK_ITEM_GENRE"/>
@@ -64,6 +63,7 @@
             <column name="BALANCE" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
+            <column name="ADMIN" type="BOOLEAN"/>
         </createTable>
 
         <createTable tableName="BOT_USER_ITEM">
@@ -83,5 +83,6 @@
         <addUniqueConstraint constraintName="UK_BOT_USER_ITEM" tableName="BOT_USER_ITEM"
                              columnNames="BOT_USER_ID, ITEM_ID"/>
     </changeSet>
+
 </databaseChangeLog>
 

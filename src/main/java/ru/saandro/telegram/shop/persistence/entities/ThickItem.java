@@ -2,120 +2,82 @@ package ru.saandro.telegram.shop.persistence.entities;
 
 import ru.saandro.telegram.shop.controller.*;
 import ru.saandro.telegram.shop.core.*;
-import ru.saandro.telegram.shop.logger.*;
 
 import java.io.*;
 import java.nio.file.*;
 
-import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.request.*;
-import com.pengrad.telegrambot.response.*;
 
-public class ThickItem implements Item {
+public class ThickItem implements Item, ItemSender {
 
     private final Item origin;
-    private final SimpleTelegramLogger logger;
-    private final ContentFile preview;
-    private final ContentFile content;
 
-    public ThickItem(Item item, SimpleTelegramLogger logger, ContentFile preview, ContentFile content) {
+    public ThickItem(Item item, ContentFile preview, ContentFile content) {
         this.origin = item;
-        this.logger = logger;
-        this.preview = preview;
-        this.content = content;
     }
 
-    public ThickItem(Item item, SimpleTelegramLogger logger) {
+    public ThickItem(Item item) {
         this.origin = item;
-        this.logger = logger;
-        preview = loadPreview();
-        content = loadContent();
-    }
-
-    private ContentFile loadContent() {
-        return ContentFile.of(origin.getContentPath());
-    }
-
-    private ContentFile loadPreview() {
-        return ContentFile.of(origin.getPreviewPath());
     }
 
     @Override
-    public AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) {
-        return prepareRequest(chatId, origin.getPreviewPath());
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) throws IOException {
+        return prepareRequest(chatId, Paths.get(origin.previewPath()));
     }
 
     @Override
-    public AbstractSendRequest<? extends AbstractSendRequest<?>> sendContent(ShopBot bot, long chatId) {
-        return prepareRequest(chatId, origin.getContentPath());
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> prepareContent(ShopBot bot, long chatId) throws IOException {
+        return prepareRequest(chatId, Paths.get(origin.contentPath()));
     }
 
-    @Override
-    public void store() throws ShopBotException {
-        origin.store();
-        try {
-            saveFile(origin.getPreviewPath(), preview);
-        } catch (IOException e) {
-            throw new ShopBotException("Unable to save the preview", e);
-        }
-        try {
-            saveFile(origin.getContentPath(), content);
-        } catch (IOException e) {
-            throw new ShopBotException("Unable to save the content", e);
-        }
-        origin.getContentPath();
-    }
-
-    private AbstractMultipartRequest<?> prepareRequest(long chatId, Path previewPath) {
+    private AbstractMultipartRequest<?> prepareRequest(long chatId, Path previewPath) throws IOException {
         if (Files.exists(previewPath)) {
             String fileExtension = com.google.common.io.Files.getFileExtension(previewPath.toString());
             if (fileExtension.equalsIgnoreCase("jpg") || fileExtension.equalsIgnoreCase("png")) {
                 SendPhoto sendPhoto = new SendPhoto(chatId, previewPath.toFile());
-                sendPhoto.caption(origin.getDescription());
+                sendPhoto.caption(origin.description());
                 return sendPhoto;
             } else {
                 SendVideo sendVideo = new SendVideo(chatId, previewPath.toFile());
-                sendVideo.caption(origin.getDescription());
+                sendVideo.caption(origin.description());
                 return sendVideo;
             }
         }
         return null;
     }
 
-    private void saveFile(Path path, ContentFile contentFile) throws IOException {
-        if (!Files.exists(path.getParent())) {
-            Files.createDirectories(path.getParent());
-        }
-        Files.write(path, contentFile.data);
+    @Override
+    public Long id() {
+        return origin.id();
     }
 
     @Override
-    public Path getContentPath() {
-        return origin.getContentPath();
+    public String title() throws IOException {
+        return origin.title();
     }
 
     @Override
-    public Path getPreviewPath() {
-        return origin.getPreviewPath();
+    public String description() throws IOException {
+        return origin.description();
     }
 
     @Override
-    public int getPrice() {
-        return origin.getPrice();
+    public String author() throws IOException {
+        return origin.author();
     }
 
     @Override
-    public Long getId() {
-        return origin.getId();
+    public Integer price() throws IOException {
+        return origin.price();
     }
 
     @Override
-    public String getTitle() {
-        return origin.getTitle();
+    public String contentPath() throws IOException {
+        return origin.contentPath();
     }
 
     @Override
-    public String getDescription() {
-        return origin.getDescription();
+    public String previewPath() throws IOException {
+        return origin.previewPath();
     }
 }

@@ -12,7 +12,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.*;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -44,7 +43,7 @@ public class UploadVideoController extends AbstractScreenController {
     }
 
     @Override
-    public void processCallback(CallbackQuery callbackQuery) {
+    public void processCallback(CallbackQuery callbackQuery) throws IOException {
         String data = callbackQuery.data();
         Optional<BackCommand> parse = EnumWithDescription.parse(data, BackCommand.class);
         if (parse.isPresent()) {
@@ -61,8 +60,9 @@ public class UploadVideoController extends AbstractScreenController {
                 switch (confirmationCommands) {
                     case YES -> {
                         try {
-                            itemBuilder.build(bot, session.getUser().name(), bot.getLogger()).store();
-                        } catch (ShopBotException e) {
+
+                            itemBuilder.buildAndStore(bot.getSource(), session.getUser().name(), bot.getLogger());
+                        } catch (Exception e) {
                             prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну и напишите мне, что я облажался хд.");
                             bot.getLogger().log(Level.WARNING, "Storage error", e);
                         }
@@ -83,7 +83,7 @@ public class UploadVideoController extends AbstractScreenController {
     }
 
     @Override
-    public void processMessage(Message message) {
+    public void processMessage(Message message) throws IOException {
         switch (uploadState) {
             case TITLE -> {
                 itemBuilder.title(message.text());
@@ -94,8 +94,8 @@ public class UploadVideoController extends AbstractScreenController {
                 itemBuilder.description(message.text());
                 uploadState = GENRE;
                 try {
-                    prepareAndSendMenu("Выберите жанр видео.", new PgGenres(bot).getAllGenres());
-                } catch (SQLException e) {
+                    prepareAndSendMenu("Выберите жанр видео.", new CachedPgGenres(bot.getSource()).getAllGenres());
+                } catch (Exception e) {
                     bot.getLogger().log(Level.WARNING, "Unable to get Genres");
                     prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну или напишите мне, что я облажался хд.", BackCommand.class);
                 }
@@ -177,7 +177,7 @@ public class UploadVideoController extends AbstractScreenController {
 
 
     @Override
-    public void onStart() {
+    public void onStart() throws IOException {
         uploadState = TITLE;
         prepareAndSendMenu("Введите название видео.", BackCommand.class);
     }

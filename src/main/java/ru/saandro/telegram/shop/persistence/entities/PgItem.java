@@ -2,108 +2,105 @@ package ru.saandro.telegram.shop.persistence.entities;
 
 import ru.saandro.telegram.shop.core.*;
 
-import java.nio.file.*;
+import javax.sql.*;
+import java.io.*;
 import java.sql.*;
-import java.util.*;
 
 import com.jcabi.jdbc.*;
 import com.pengrad.telegrambot.request.*;
 
 public class PgItem implements Item {
 
-    private final PersistenceProvider provider;
+    private final DataSource dataSource;
     private final Long id;
-    private final String title;
-    private final String description;
-    private final String author;
-    private final Long genre;
-    private final int price;
-    private final Path previewPath;
-    private final Path contentPath;
 
-    public PgItem(PersistenceProvider provider, Long id, String title, String description, String author, Long genre, int price, Path previewPath, Path contentPath) {
-        this.provider = provider;
+    public PgItem(DataSource dataSource, Long id) {
+        this.dataSource = dataSource;
         this.id = id;
-        this.title = title;
-        this.description = description;
-        this.author = author;
-        this.genre = genre;
-        this.price = price;
-        this.previewPath = previewPath;
-        this.contentPath = contentPath;
     }
 
-    public PgItem(PersistenceProvider provider, long key, PgItem other) {
-        this.provider = provider;
-        this.id = key;
-        this.title = other.title;
-        this.description = other.description;
-        this.author = other.author;
-        this.genre = other.genre;
-        this.price = other.price;
-        this.previewPath = other.previewPath;
-        this.contentPath = other.contentPath;
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) throws IOException {
+        return new SendMessage(chatId, title());
     }
 
-    public AbstractSendRequest<? extends AbstractSendRequest<?>> preparePreview(ShopBot bot, long chatId) {
-        return new SendMessage(chatId, prepareTheMessage());
-    }
-
-    public AbstractSendRequest<? extends AbstractSendRequest<?>> sendContent(ShopBot bot, long chatId) {
-        return new SendMessage(chatId, prepareTheMessage());
+    public AbstractSendRequest<? extends AbstractSendRequest<?>> prepareContent(ShopBot bot, long chatId) throws IOException {
+        return new SendMessage(chatId, title());
     }
 
     @Override
-    public void store() throws ShopBotException {
-        try {
-            Optional<PgItem> result = new JdbcSession(provider.getSource())
-                    .sql("INSERT INTO ITEM(TITLE, DESCRIPTION, AUTHOR, PRICE, PREVIEW_PATH, CONTENT_PATH) VALUES(?,?,?,?,?,?)")
-                    .set(title).set(description).set(author).set(price).set(previewPath.toString()).set(contentPath.toString())
-                    .insert(new ListOutcome<>(
-                            rset -> new PgItem(provider, rset.getLong(1), this))).stream().findAny();
-            if (result.isPresent()) {
-                new JdbcSession(provider.getSource())
-                        .sql("INSERT INTO ITEM_GENRE(ITEM_ID, GENRE_ID) VALUES(?,?)")
-                        .set(result.get().id).set(genre).execute();
-            }
-
-
-        } catch (SQLException e) {
-            throw new ShopBotException("Unable to create new user", e);
-        }
-    }
-
-    @Override
-    public Path getContentPath() {
-        return contentPath;
-    }
-
-    @Override
-    public Path getPreviewPath() {
-        return previewPath;
-    }
-
-    @Override
-    public int getPrice() {
-        return price;
-    }
-
-    @Override
-    public Long getId() {
+    public Long id() {
         return id;
     }
 
     @Override
-    public String getTitle() {
-        return title;
+    public String title() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT title FROM item WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(String.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
-    public String getDescription() {
-        return prepareTheMessage();
+    public String description() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT title FROM item WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(String.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 
-    private String prepareTheMessage() {
-        return title + System.lineSeparator() + description;
+    @Override
+    public String author() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT author FROM item WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(String.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public Integer price() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT price FROM item WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(Integer.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public String contentPath() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT content_path FROM item WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(String.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public String previewPath() throws IOException {
+        try {
+            return new JdbcSession(dataSource)
+                    .sql("SELECT preview_path FROM item WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<>(String.class));
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 }

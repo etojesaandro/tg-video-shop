@@ -1,5 +1,6 @@
 package ru.saandro.telegram.shop.controller;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
@@ -15,7 +16,7 @@ public class ControlRoomController extends AbstractScreenController {
     }
 
     @Override
-    public void processCallback(CallbackQuery callbackQuery) {
+    public void processCallback(CallbackQuery callbackQuery) throws IOException {
         Optional<ControlRoomCommands> parse = EnumWithDescription.parse(callbackQuery.data(), ControlRoomCommands.class);
         if (parse.isEmpty()) {
             return;
@@ -31,7 +32,7 @@ public class ControlRoomController extends AbstractScreenController {
     }
 
     @Override
-    public void onStart() {
+    public void onStart() throws IOException {
         prepareAndSendMenu("Добрый день, *Администратор*. Чем я могу вам помочь сегодня?", ControlRoomCommands.class);
     }
 }

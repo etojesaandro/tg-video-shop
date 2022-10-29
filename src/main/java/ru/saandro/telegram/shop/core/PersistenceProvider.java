@@ -4,5 +4,5 @@ import javax.sql.*;
 import java.sql.*;
 
 public interface PersistenceProvider {
-    DataSource getSource() throws SQLException;
+    DataSource getSource();
 }

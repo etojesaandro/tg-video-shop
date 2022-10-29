@@ -1,5 +1,6 @@
 package ru.saandro.telegram.shop.session;
 
+import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -46,20 +47,19 @@ public class UserSession extends Thread {
                 } else if (command.isCallbackQuery()) {
                     processCallbackQuery(command.update.callbackQuery());
                 }
-
-            } catch (InterruptedException e) {
-                bot.getLogger().log(Level.SEVERE, "User session was interrupted!", e);
+            } catch (Exception e) {
+                bot.getLogger().log(Level.SEVERE, "Exception during message processing", e);
             }
         }
     }
 
-    private void processCallbackQuery(CallbackQuery callbackQuery) {
+    private void processCallbackQuery(CallbackQuery callbackQuery) throws IOException {
         if (currentController != null) {
             currentController.processCallback(callbackQuery);
         }
     }
 
-    private void processMessage(Message message) {
+    private void processMessage(Message message) throws IOException {
         BotCommands botCommand = BotCommands.parse(message.text());
         if (botCommand == null && currentController != null) {
             currentController.processMessage(message);
@@ -72,7 +72,7 @@ public class UserSession extends Thread {
         }
     }
 
-    public void switchTo(BotScreens home) {
+    public void switchTo(BotScreens home) throws IOException {
         switch (home) {
             case HOME -> currentController = new HomeScreenController(bot, this, chatId);
             case BUY_VIDEOS -> currentController = new BuyVideosController(bot, this, chatId);

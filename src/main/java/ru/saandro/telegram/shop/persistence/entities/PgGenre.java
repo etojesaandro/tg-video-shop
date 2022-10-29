@@ -1,39 +1,45 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
-import ru.saandro.telegram.shop.core.*;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.SQLException;
 
-import java.sql.*;
+import com.jcabi.jdbc.JdbcSession;
+import com.jcabi.jdbc.SingleOutcome;
 
-import com.jcabi.jdbc.*;
-
-public class PgGenre implements Markable {
-    private final PersistenceProvider provider;
+public class PgGenre implements Markable, Genre {
+    private final DataSource dataSource;
     private final Long id;
-    private final String name;
 
-    public PgGenre(PersistenceProvider provider, Long id, String name) {
-        this.provider = provider;
+    public PgGenre(DataSource dataSource, Long id) {
+        this.dataSource = dataSource;
         this.id = id;
-        this.name = name;
     }
 
     @Override
-    public String getName() {
+    public String getMarkableName() {
         return id + "";
     }
 
     @Override
-    public String getDescription() {
-        return name;
+    public String getMarkableDescription() throws IOException {
+        return name();
     }
 
-    public void store() throws ShopBotException {
+    @Override
+    public long id() {
+        return id;
+    }
+
+    @Override
+    public String name() throws IOException {
         try {
-            new JdbcSession(provider.getSource())
-                    .sql("INSERT INTO GENRE(NAME) VALUES(?)")
-                    .set(name).execute();
+            return new JdbcSession(dataSource)
+                    .sql("SELECT name FROM genre WHERE id = ?")
+                    .set(id)
+                    .select(new SingleOutcome<String>(String.class));
         } catch (SQLException e) {
-            throw new ShopBotException("Unable to create new Genre", e);
+            throw new IOException(e);
         }
     }
 }

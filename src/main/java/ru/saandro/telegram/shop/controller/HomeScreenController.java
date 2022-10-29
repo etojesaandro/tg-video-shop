@@ -1,5 +1,6 @@
 package ru.saandro.telegram.shop.controller;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ public final class HomeScreenController extends AbstractScreenController {
     }
 
     @Override
-    public void processCallback(CallbackQuery callbackQuery) {
+    public void processCallback(CallbackQuery callbackQuery) throws IOException {
         Optional<HomeScreenCommands> parse = EnumWithDescription.parse(callbackQuery.data(), HomeScreenCommands.class);
         if (parse.isEmpty()) {
             return;
@@ -31,7 +32,7 @@ public final class HomeScreenController extends AbstractScreenController {
     }
 
     @Override
-    public void onStart() {
+    public void onStart() throws IOException {
         prepareAndSendMenu("Впереди - нечто потрясающее!", HomeScreenCommands.class);
     }
 

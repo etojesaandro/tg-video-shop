@@ -1,5 +1,6 @@
 package ru.saandro.telegram.shop.controller;
 
+import java.io.*;
 import java.util.EnumSet;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
@@ -31,13 +32,13 @@ public abstract class AbstractScreenController implements ScreenController {
         bot.execute(message);
     }
 
-    protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title, Class<E> enumClass) {
+    protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title, Class<E> enumClass) throws IOException {
         EnumSet<E> es = EnumSet.allOf(enumClass);
         SendMessage message = new SendMessage(chatId, title);
         message.parseMode(ParseMode.Markdown);
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         for (EnumWithDescription e : es) {
-            if (e.isAdmin() && !session.getUser().isAdmin()) {
+            if (e.isAdmin() && !session.getUser().admin()) {
                 continue;
             }
             markupInline.addRow(createButton(e));
@@ -46,12 +47,12 @@ public abstract class AbstractScreenController implements ScreenController {
         bot.execute(message);
     }
 
-    protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title, Iterable<Markable> items) {
+    protected <E extends Enum<E> & EnumWithDescription> void prepareAndSendMenu(String title, Iterable<? extends Markable> items) throws IOException {
         SendMessage message = new SendMessage(chatId, title);
         message.parseMode(ParseMode.Markdown);
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         for (Markable markable : items) {
-            markupInline.addRow(new InlineKeyboardButton(markable.getDescription()).callbackData(markable.getName()));
+            markupInline.addRow(new InlineKeyboardButton(markable.getMarkableDescription()).callbackData(markable.getMarkableName()));
         }
         markupInline.addRow(createButton(BackCommand.BACK));
         message.replyMarkup(markupInline);
@@ -63,11 +64,11 @@ public abstract class AbstractScreenController implements ScreenController {
     }
 
     @Override
-    public void processCallback(CallbackQuery callbackQuery) {
+    public void processCallback(CallbackQuery callbackQuery) throws IOException {
     }
 
     @Override
-    public void processMessage(Message message) {
+    public void processMessage(Message message) throws IOException {
         onStart();
     }
 

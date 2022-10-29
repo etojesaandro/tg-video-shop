@@ -4,7 +4,7 @@ import ru.saandro.telegram.shop.core.*;
 import ru.saandro.telegram.shop.persistence.entities.*;
 import ru.saandro.telegram.shop.session.*;
 
-import java.sql.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.*;
 
@@ -19,7 +19,7 @@ public class ProcessGenreController extends AbstractScreenController {
     }
 
     @Override
-    public void processCallback(CallbackQuery callbackQuery) {
+    public void processCallback(CallbackQuery callbackQuery) throws IOException {
         if (EnumWithDescription.parse(callbackQuery.data(), BackCommand.class).isPresent()) {
             session.switchTo(BotScreens.CONTROL_ROOM);
             return;
@@ -38,7 +38,7 @@ public class ProcessGenreController extends AbstractScreenController {
                     }
                     case DELETE -> {
                         try {
-                            Iterable<Markable> allGenres = new PgGenres(bot).getAllGenres();
+                            Iterable<Genre> allGenres = new CachedPgGenres(bot.getSource()).getAllGenres();
                             if (!allGenres.iterator().hasNext())
                             {
                                 prepareAndSendMenu("Ещё не создано ни одного жанра!");
@@ -47,7 +47,7 @@ public class ProcessGenreController extends AbstractScreenController {
                             prepareAndSendMenu("Выберите жанр для удаления", allGenres);
                             processGenreState = ProcessGenreState.DELETE;
                             return;
-                        } catch (SQLException e) {
+                        } catch (Exception e) {
                             prepareAndSendMenu("Неудачно");
                             session.switchTo(BotScreens.CONTROL_ROOM);
                             bot.getLogger().log(Level.WARNING, "Unable to select genres", e);
@@ -60,8 +60,8 @@ public class ProcessGenreController extends AbstractScreenController {
                 return;
             case DELETE:
                 try {
-                    new PgGenres(bot).deleteGenreById(Long.parseLong(callbackQuery.data()));
-                } catch (SQLException | NumberFormatException e) {
+                    new CachedPgGenres(bot.getSource()).deleteGenreById(Long.parseLong(callbackQuery.data()));
+                } catch (Exception e) {
                     prepareAndSendMenu("Неудачно");
                     bot.getLogger().log(Level.WARNING, "Unable to delete genre", e);
                 }
@@ -71,12 +71,12 @@ public class ProcessGenreController extends AbstractScreenController {
     }
 
     @Override
-    public void processMessage(Message message) {
+    public void processMessage(Message message) throws IOException {
         if (processGenreState == ProcessGenreState.ADD) {
             try {
-                new PgGenres(bot).createGenre(message.text());
+                new CachedPgGenres(bot.getSource()).add(message.text());
                 prepareAndSendMenu("Жанр успешно создан!");
-            } catch (ShopBotException e) {
+            } catch (Exception e) {
                 prepareAndSendMenu("Неудачно...!");
                 bot.getLogger().log(Level.WARNING, "Unable to add new Genre");
             }
@@ -85,7 +85,7 @@ public class ProcessGenreController extends AbstractScreenController {
     }
 
     @Override
-    public void onStart() {
+    public void onStart() throws IOException {
         prepareAndSendMenu("Что вы хотите сделать?", ProcessGenreCommands.class);
 
     }

@@ -6,6 +6,8 @@ import com.pengrad.telegrambot.model.Message;
 import ru.saandro.telegram.shop.core.ShopBot;
 import ru.saandro.telegram.shop.session.UserSession;
 
+import java.io.IOException;
+
 public class PromotionController extends AbstractScreenController {
 
     public PromotionController(ShopBot bot, UserSession session, Long chatId) {
@@ -13,12 +15,12 @@ public class PromotionController extends AbstractScreenController {
     }
 
     @Override
-    public void processCallback(CallbackQuery callbackQuery) {
+    public void processCallback(CallbackQuery callbackQuery) throws IOException {
         session.switchTo(BotScreens.CONTROL_ROOM);
     }
 
     @Override
-    public void processMessage(Message message) {
+    public void processMessage(Message message) throws IOException {
         String name = message.text();
         if (!name.startsWith("@")) {
             prepareAndSendMenu("Некорректное имя. Попробуйте ещё раз.", BackCommand.class);
@@ -29,7 +31,7 @@ public class PromotionController extends AbstractScreenController {
     }
 
     @Override
-    public void onStart() {
+    public void onStart() throws IOException {
         prepareAndSendMenu("Введите @name будущего Администратора.", BackCommand.class);
     }
 }
