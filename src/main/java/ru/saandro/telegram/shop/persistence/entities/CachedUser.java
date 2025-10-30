@@ -39,6 +39,7 @@ public class CachedUser implements BotUser {
 
     @Override
     public void purchaseItem(Item itemToPurchase) throws IOException {
+        updateBalance(balance() - itemToPurchase.price());
         origin.purchaseItem(itemToPurchase);
     }
 

@@ -21,8 +21,7 @@ public class MyVideosController extends AbstractScreenController {
     }
 
     @Override
-    public void onStart() {
-
+    public void onStart() throws IOException {
         try {
             Iterable<Item> purchasedItems = new CachedPgItems(bot.getSource()).getPurchasedItemsByUser(session.getUser().id());
             if (!purchasedItems.iterator().hasNext()) {
@@ -34,10 +33,9 @@ public class MyVideosController extends AbstractScreenController {
                 AbstractSendRequest<? extends AbstractSendRequest<?>> request = thickItem.prepareContent(bot, chatId);
                 bot.execute(request);
             }
+            prepareAndSendMenu("Приятного просмотра!", BackCommand.class);
         } catch (Exception e) {
             prepareAndSendMenu("Произошла ошибка. Повторите позднее... Ну и напишите мне, что я облажался хд.");
         }
-
-
     }
 }

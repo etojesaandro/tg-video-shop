@@ -4,9 +4,12 @@ import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
 
 import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.persistence.entities.BotUser;
+import ru.saandro.telegram.shop.persistence.entities.CachedPgUsers;
 import ru.saandro.telegram.shop.session.UserSession;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class PromotionController extends AbstractScreenController {
 
@@ -22,12 +25,21 @@ public class PromotionController extends AbstractScreenController {
     @Override
     public void processMessage(Message message) throws IOException {
         String name = message.text();
+        cleanTheMessage(message.messageId());
         if (!name.startsWith("@")) {
             prepareAndSendMenu("Некорректное имя. Попробуйте ещё раз.", BackCommand.class);
             return;
         }
-        bot.getConfiguration().promoteAdmin(name);
-        prepareAndSendMenu(name + " теперь Администратор!", BackCommand.class);
+        Optional<? extends BotUser> user = new CachedPgUsers(bot.getSource()).findUser(name.substring(1));
+        if (user.isPresent())
+        {
+            user.get().promote();
+            prepareAndSendMenu(name + " теперь Администратор!", BackCommand.class);
+        } else {
+            prepareAndSendMenu("Пользователь " + name + " не найден! Ему требуется хотя бы раз запустить бота для регистрации.", BackCommand.class);
+        }
+
+
     }
 
     @Override

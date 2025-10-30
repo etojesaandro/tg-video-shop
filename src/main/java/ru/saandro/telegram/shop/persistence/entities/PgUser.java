@@ -111,7 +111,7 @@ public class PgUser implements BotUser {
                     .select(new SingleOutcome<>(Long.class));
             return select != null;
         } catch (SQLException e) {
-            throw new IOException(e);
+            return false;
         }
     }
 }

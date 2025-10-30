@@ -1,23 +1,34 @@
 package ru.saandro.telegram.shop.persistence.entities;
 
-import ru.saandro.telegram.shop.controller.*;
-import ru.saandro.telegram.shop.core.*;
+import ru.saandro.telegram.shop.controller.ContentFile;
+import ru.saandro.telegram.shop.core.ShopBot;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import com.pengrad.telegrambot.request.*;
+import com.pengrad.telegrambot.request.AbstractMultipartRequest;
+import com.pengrad.telegrambot.request.AbstractSendRequest;
+import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.request.SendVideo;
 
 public class ThickItem implements Item, ItemSender {
 
     private final Item origin;
+    private final ContentFile preview;
+    private final ContentFile content;
 
     public ThickItem(Item item, ContentFile preview, ContentFile content) {
         this.origin = item;
+        this.preview = preview;
+        this.content = content;
     }
 
     public ThickItem(Item item) {
         this.origin = item;
+        preview = null;
+        content = null;
     }
 
     @Override
@@ -84,5 +95,16 @@ public class ThickItem implements Item, ItemSender {
     @Override
     public String previewPath() throws IOException {
         return origin.previewPath();
+    }
+
+    public void store() throws IOException {
+        if (preview != null)
+        {
+            Files.write(Files.createDirectories(Paths.get(origin.previewPath()).getParent()).resolve(preview.filePath), preview.data);
+        }
+        if (content != null)
+        {
+            Files.write(Files.createDirectories(Paths.get(origin.contentPath()).getParent()).resolve(content.filePath), content.data);
+        }
     }
 }

@@ -1,14 +1,16 @@
 package ru.saandro.telegram.shop.controller;
 
-import ru.saandro.telegram.shop.core.*;
-import ru.saandro.telegram.shop.persistence.entities.*;
-import ru.saandro.telegram.shop.session.*;
+import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.persistence.entities.CachedPgGenres;
+import ru.saandro.telegram.shop.persistence.entities.Genre;
+import ru.saandro.telegram.shop.session.UserSession;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.logging.*;
+import java.util.Optional;
+import java.util.logging.Level;
 
-import com.pengrad.telegrambot.model.*;
+import com.pengrad.telegrambot.model.CallbackQuery;
+import com.pengrad.telegrambot.model.Message;
 
 public class ProcessGenreController extends AbstractScreenController {
 
@@ -39,8 +41,7 @@ public class ProcessGenreController extends AbstractScreenController {
                     case DELETE -> {
                         try {
                             Iterable<Genre> allGenres = new CachedPgGenres(bot.getSource()).getAllGenres();
-                            if (!allGenres.iterator().hasNext())
-                            {
+                            if (!allGenres.iterator().hasNext()) {
                                 prepareAndSendMenu("Ещё не создано ни одного жанра!");
                                 return;
                             }
@@ -72,6 +73,7 @@ public class ProcessGenreController extends AbstractScreenController {
 
     @Override
     public void processMessage(Message message) throws IOException {
+        cleanTheMessage(message.messageId());
         if (processGenreState == ProcessGenreState.ADD) {
             try {
                 new CachedPgGenres(bot.getSource()).add(message.text());

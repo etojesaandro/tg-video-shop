@@ -1,5 +1,21 @@
 package ru.saandro.telegram.shop.session;
 
+import ru.saandro.telegram.shop.conf.BotCommands;
+import ru.saandro.telegram.shop.controller.BotScreens;
+import ru.saandro.telegram.shop.controller.BuyVideosController;
+import ru.saandro.telegram.shop.controller.ControlRoomController;
+import ru.saandro.telegram.shop.controller.DonateController;
+import ru.saandro.telegram.shop.controller.HomeScreenController;
+import ru.saandro.telegram.shop.controller.MyVideosController;
+import ru.saandro.telegram.shop.controller.ProcessGenreController;
+import ru.saandro.telegram.shop.controller.PromotionController;
+import ru.saandro.telegram.shop.controller.StatisticController;
+import ru.saandro.telegram.shop.controller.UploadVideoController;
+import ru.saandro.telegram.shop.core.ScreenController;
+import ru.saandro.telegram.shop.core.ShopBot;
+import ru.saandro.telegram.shop.core.UpdateWrapper;
+import ru.saandro.telegram.shop.persistence.entities.BotUser;
+
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -7,13 +23,6 @@ import java.util.logging.Level;
 
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
-
-import ru.saandro.telegram.shop.conf.BotCommands;
-import ru.saandro.telegram.shop.controller.*;
-import ru.saandro.telegram.shop.core.ScreenController;
-import ru.saandro.telegram.shop.core.ShopBot;
-import ru.saandro.telegram.shop.core.UpdateWrapper;
-import ru.saandro.telegram.shop.persistence.entities.*;
 
 public class UserSession extends Thread {
 
@@ -26,6 +35,8 @@ public class UserSession extends Thread {
     private final BlockingQueue<UpdateWrapper> commandQueue = new LinkedBlockingQueue<>();
 
     private volatile ScreenController currentController;
+
+    private volatile Integer messageId;
 
     public UserSession(ShopBot bot, BotUser user, long chatId) {
         this.chatId = chatId;
@@ -66,6 +77,7 @@ public class UserSession extends Thread {
             return;
         }
         if (botCommand == BotCommands.START) {
+            updateLastMessageId(null);
             switchTo(BotScreens.HOME);
         } else {
             bot.getLogger().log(Level.SEVERE, "Unexpected value: " + botCommand);
@@ -91,5 +103,13 @@ public class UserSession extends Thread {
 
     public BotUser getUser() {
         return user;
+    }
+
+    public Integer getLastMessageId() {
+        return messageId;
+    }
+
+    public void updateLastMessageId(Integer messageId) {
+        this.messageId = messageId;
     }
 }

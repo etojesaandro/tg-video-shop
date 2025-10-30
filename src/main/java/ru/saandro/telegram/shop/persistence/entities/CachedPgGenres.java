@@ -53,7 +53,7 @@ public record CachedPgGenres(DataSource dataSource) implements Genres {
     public Optional<CachedGenre> getGenreById(long id) throws IOException {
         try {
             List<CachedGenre> select = new JdbcSession(dataSource)
-                    .sql("SELECT FROM GENRE WHERE ID = ?")
+                    .sql("SELECT * FROM GENRE WHERE ID = ?")
                     .set(id)
                     .select(new ListOutcome<>(
                                     rset -> new CachedGenre(new PgGenre(dataSource, rset.getLong(1)),

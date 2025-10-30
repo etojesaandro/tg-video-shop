@@ -19,6 +19,7 @@ import com.pengrad.telegrambot.model.*;
 import com.pengrad.telegrambot.request.*;
 import com.pengrad.telegrambot.response.*;
 
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
 public class ShopBotImpl implements ShopBot {
@@ -57,6 +58,7 @@ public class ShopBotImpl implements ShopBot {
             }
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
+        logger.log(INFO, "Бот запущен!");
     }
 
     @Override
@@ -92,6 +94,7 @@ public class ShopBotImpl implements ShopBot {
 
         Optional<Chat> chatOpt = updateWrapper.getChat();
         if (chatOpt.isEmpty()) {
+
             throw new RuntimeException("Chat is null");
         }
 

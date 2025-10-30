@@ -36,7 +36,4 @@ public class DebugBotConfiguration implements BotConfiguration {
         return Path.of("content");
     }
 
-    @Override
-    public void promoteAdmin(String name) {
-    }
 }
